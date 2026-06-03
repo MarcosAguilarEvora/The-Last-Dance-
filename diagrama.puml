@@ -1,0 +1,150 @@
+@startuml
+skinparam style strictuml
+skinparam DefaultFontName "Arial"
+
+enum GameState {
+    MENU_PRINCIPAL
+    SELECCION_PERSONAJE
+    GALERIA_ENEMIGOS
+    JUGANDO
+    NIVEL_COMPLETADO
+    VICTORIA
+    GAME_OVER
+}
+
+enum PowerUpType {
+    NINGUNO
+    TAQUETES
+    ESPINILLERAS
+    GUANTES
+    BANDA_CAPITAN
+    TARJETA_AMARILLA
+    TARJETA_ROJA
+}
+
+class Juego {
+    - sf::RenderWindow ventana
+    - GameState estadoActual
+    - Personaje jugador
+    - Enemigo* enemigoActual
+    - std::vector<Balon> balones
+    - std::vector<AtaqueEnemigo> ataquesEnemigos
+    - std::vector<PowerUp> powerUps
+    - sf::Clock relojGlobal
+    - sf::Clock relojPowerUp
+    - int puntosTotales
+    - int nivelActual
+    - std::string nombrePersonajeSeleccionado
+    - std::string texturaPersonajePath
+    --
+    + Juego()
+    + ejecutar()
+    - procesarEventos()
+    - actualizar(float dt)
+    - renderizar()
+    - cambiarEstado(GameState nuevoEstado)
+    - inicializarNivel(int nivel)
+    - verificarColisiones()
+    - spawnPowerUp(float x, float y)
+}
+
+class Personaje {
+    - sf::Sprite sprite
+    - sf::Texture textura
+    - float velocidad
+    - int vidas
+    - bool invencible
+    - bool congelado
+    - bool disparoTriple
+    - float x, y
+    --
+    + Personaje()
+    + configurar(std::string nombre, std::string pathTextura)
+    + mover(float dirX, float dt)
+    + saltar()
+    + lanzarBalon(std::vector<Balon>& balones)
+    + recibirDanio() : bool
+    + aplicarPowerUp(PowerUpType tipo)
+    + desactivarPowerUps()
+    + dibujar(sf::RenderWindow& ventana)
+    + getBounds() : sf::FloatRect
+}
+
+class Enemigo {
+    - sf::Sprite sprite
+    - sf::Texture textura
+    - std::string nombre
+    - float vida
+    - float velocidad
+    - float x, y
+    - int direccion
+    - float temporizadorAtaque
+    - float intervaloAtaque
+    --
+    + Enemigo(std::string nombre, int nivel)
+    + actualizar(float dt)
+    + lanzarAtaque(std::vector<AtaqueEnemigo>& ataques)
+    + recibirDanio(int cantidad) : bool
+    + dibujar(sf::RenderWindow& ventana)
+    + getBounds() : sf::FloatRect
+}
+
+class Balon {
+    - sf::Sprite sprite
+    - float vx, vy
+    --
+    + Balon(float x, float y, float vx, float vy)
+    + actualizar(float dt)
+    + dibujar(sf::RenderWindow& ventana)
+    + getBounds() : sf::FloatRect
+}
+
+class AtaqueEnemigo {
+    - sf::Sprite sprite
+    - float velocidad
+    - PowerUpType tipoAsociado
+    --
+    + AtaqueEnemigo(float x, float y, float vel, std::string pathTextura, PowerUpType tipo)
+    + actualizar(float dt)
+    + dibujar(sf::RenderWindow& ventana)
+    + getBounds() : sf::FloatRect
+}
+
+class PowerUp {
+    - sf::Sprite sprite
+    - PowerUpType tipo
+    --
+    + PowerUp(float x, float y, PowerUpType tipo, std::string pathTextura)
+    + actualizar(float dt)
+    + dibujar(sf::RenderWindow& ventana)
+    + getBounds() : sf::FloatRect
+    + getTipo() : PowerUpType
+}
+
+class InterfazUsuario {
+    - sf::Font fuente
+    - sf::Text txtHUD
+    - sf::Text txtPantallas
+    --
+    + InterfazUsuario()
+    + dibujarHUD(sf::RenderWindow& ventana, int puntos, int nivel, int vidas, int vidaEnemigo, PowerUpType power, float tiempoPower)
+    + dibujarMenu(sf::RenderWindow& ventana)
+    + dibujarSeleccion(sf::RenderWindow& ventana)
+    + dibujarGaleria(sf::RenderWindow& ventana)
+    + dibujarNivelCompletado(sf::RenderWindow& ventana, int puntos, int vidas, std::string proximo)
+    + dibujarVictoria(sf::RenderWindow& ventana, int puntos, float tiempo)
+    + dibujarGameOver(sf::RenderWindow& ventana, int puntos, int nivel)
+}
+
+Juego *-- Personaje
+Juego *-- Enemigo
+Juego *-- Balon
+Juego *-- AtaqueEnemigo
+Juego *-- PowerUp
+Juego *-- InterfazUsuario
+Juego ..> GameState
+Personaje ..> PowerUpType
+PowerUp ..> PowerUpType
+AtaqueEnemigo ..> PowerUpType
+
+@enduml
