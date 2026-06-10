@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Entidades.hpp"
+#include "entidades.hpp"
 #include <iostream>
 
 class InterfazUsuario {

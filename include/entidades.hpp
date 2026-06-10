@@ -1,6 +1,4 @@
-#ifndef ENTIDADES_HPP
-#define ENTIDADES_HPP
-
+#pragma once
 #include <SFML/Graphics.hpp>
 
 enum class PowerUpType { NINGUNO, TAQUETES, ESPINILLERAS, GUANTES, BANDA_CAPITAN, TARJETA_AMARILLA, TARJETA_ROJA };
@@ -14,7 +12,7 @@ public:
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
-        sprite.setScale(0.08f, 0.08f); // Ajustar tamaño según tus assets
+        sprite.setScale(0.08f, 0.08f);
     }
 
     void actualizar(float dt) {
@@ -37,7 +35,7 @@ public:
     }
 
     void actualizar(float dt) {
-        sprite.move(0.f, velocidad * dt); // Caen en línea recta
+        sprite.move(0.f, velocidad * dt);
     }
 };
 
@@ -54,8 +52,6 @@ public:
     }
 
     void actualizar(float dt) {
-        sprite.move(0.f, 150.f * dt); // Caen lentamente flotando
+        sprite.move(0.f, 150.f * dt);
     }
 };
-
-#endif

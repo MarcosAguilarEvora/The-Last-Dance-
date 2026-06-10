@@ -1,0 +1,157 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    THE LAST DANCE - REFERENCIA RÁPIDA                         ║
+║                          Compilación con Makefile                             ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─ COMPILADOR ──────────────────────────────────────────────────────────────────┐
+│ mingw32-make                                                                   │
+│ (O alternativamente: make)                                                     │
+│ Verifica con: mingw32-make --version                                           │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ COMANDOS PRINCIPALES ────────────────────────────────────────────────────────┐
+│                                                                                │
+│ 1. COMPILAR (por defecto)                                                     │
+│    mingw32-make                                                                │
+│    mingw32-make all                                                            │
+│                                                                                │
+│ 2. EJECUTAR                                                                   │
+│    bin\FutbolJuego.exe                                                         │
+│                                                                                │
+│ 3. COMPILAR + EJECUTAR (en una línea)                                         │
+│    mingw32-make && bin\FutbolJuego.exe                                         │
+│                                                                                │
+│ 4. LIMPIAR TODO                                                               │
+│    mingw32-make clean                                                          │
+│    (Elimina: bin/ y obj/)                                                      │
+│                                                                                │
+│ 5. LIMPIAR SOLO OBJETOS                                                       │
+│    mingw32-make clean-obj                                                      │
+│    (Mantiene: bin/FutbolJuego.exe)                                             │
+│                                                                                │
+│ 6. LIMPIAR SOLO EJECUTABLE                                                    │
+│    mingw32-make clean-bin                                                      │
+│    (Mantiene: obj/*.o)                                                         │
+│                                                                                │
+│ 7. MOSTRAR INFORMACIÓN DEL PROYECTO                                           │
+│    mingw32-make info                                                           │
+│                                                                                │
+│ 8. MOSTRAR AYUDA                                                              │
+│    mingw32-make help                                                           │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ FLUJO RECOMENDADO DE TRABAJO ────────────────────────────────────────────────┐
+│                                                                                │
+│ PRIMER BUILD:                                                                 │
+│ $ cd C:\Users\Karla\OneDrive\Documentos\GitHub\The-Last-Dance-                │
+│ $ mingw32-make                                                                 │
+│ $ bin\FutbolJuego.exe                                                          │
+│                                                                                │
+│ COMPILACIÓN RÁPIDA (desarrollo):                                              │
+│ $ mingw32-make && bin\FutbolJuego.exe                                          │
+│                                                                                │
+│ LIMPIAR ANTES DE GIT:                                                         │
+│ $ mingw32-make clean                                                           │
+│ $ git add .                                                                    │
+│ $ git commit -m "Mensaje"                                                      │
+│ $ git push                                                                     │
+│                                                                                │
+│ COMPILACIÓN COMPLETA (después de cambios importantes):                        │
+│ $ mingw32-make clean                                                           │
+│ $ mingw32-make all                                                             │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ESTRUCTURA DEL PROYECTO ─────────────────────────────────────────────────────┐
+│                                                                                │
+│ The-Last-Dance-/                                                              │
+│ ├── src/              ← Archivos fuente (.cpp)                                 │
+│ │   └── main.cpp                                                              │
+│ ├── include/          ← Encabezados (.hpp)                                     │
+│ │   ├── juego.hpp                                                             │
+│ │   ├── personaje.hpp                                                         │
+│ │   ├── enemigo.hpp                                                           │
+│ │   ├── entidades.hpp                                                         │
+│ │   └── interfazusuario.hpp                                                   │
+│ ├── obj/              ← Archivos objeto (.o) [GENERADO]                        │
+│ │   └── main.o                                                                │
+│ ├── bin/              ← Ejecutable [GENERADO]                                  │
+│ │   └── FutbolJuego.exe                                                       │
+│ ├── assets/           ← Recursos (texturas, sonidos)                           │
+│ ├── Makefile          ← Sistema de compilación                                │
+│ └── COMPILACION_GUIA.md                                                       │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ LIBRERÍAS SFML ENLAZADAS ────────────────────────────────────────────────────┐
+│                                                                                │
+│ -lsfml-graphics    Gráficos 2D                                                │
+│ -lsfml-window      Ventanas y eventos                                         │
+│ -lsfml-system      Utilidades del sistema                                     │
+│ -lsfml-main        Punto de entrada de Windows (DEBE IR AL FINAL)             │
+│                                                                                │
+│ Ubicación: C:\msys64\mingw64\lib\                                              │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ CÓMO AGREGAR NUEVOS ARCHIVOS .cpp ───────────────────────────────────────────┐
+│                                                                                │
+│ 1. Crear el archivo en src/                                                   │
+│    $ echo // nuevo > src/nuevaFuncion.cpp                                      │
+│                                                                                │
+│ 2. Crear el encabezado en include/                                            │
+│    $ echo // nuevo > include/nuevaFuncion.hpp                                  │
+│                                                                                │
+│ 3. Incluir desde tu código                                                    │
+│    #include "nuevaFuncion.hpp"                                                │
+│                                                                                │
+│ 4. Compilar (EL MAKEFILE LO DETECTA AUTOMÁTICAMENTE)                          │
+│    $ mingw32-make                                                              │
+│                                                                                │
+│ El Makefile usa $(wildcard src/*.cpp) para detectar automáticamente            │
+│ todos los archivos .cpp en el directorio src/                                 │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ─────────────────────────────────────────────────────────────┐
+│                                                                                │
+│ ❌ "mingw32-make: command not found"                                          │
+│    → Verifica que MinGW esté en tu PATH                                       │
+│    → echo %PATH%                                                              │
+│    → O usa: C:\msys64\mingw64\bin\mingw32-make.exe all                         │
+│                                                                                │
+│ ❌ "No rule to make target"                                                   │
+│    → Verifica que src/main.cpp existe                                         │
+│    → Verifica que include/ tiene los .hpp                                     │
+│                                                                                │
+│ ❌ El ejecutable no se crea                                                   │
+│    → mingw32-make clean                                                       │
+│    → mingw32-make -B (fuerza recompilación)                                    │
+│                                                                                │
+│ ❌ "Permission denied" al compilar                                            │
+│    → Cierra el juego si está ejecutándose                                     │
+│    → Verifica que bin/FutbolJuego.exe no esté abierto                         │
+│                                                                                │
+│ ❌ Cambios no se reflejan en la compilación                                   │
+│    → mingw32-make clean                                                       │
+│    → mingw32-make all                                                          │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ INFORMACIÓN TÉCNICA ─────────────────────────────────────────────────────────┐
+│                                                                                │
+│ Compilador: GCC 14.2.0 (MinGW x86_64)                                          │
+│ Shell: MSYS2 (POSIX-compatible)                                               │
+│ Librería Gráfica: SFML 2.x                                                    │
+│ Punto de Entrada: int main() en src/main.cpp                                  │
+│ Modo: Windows GUI (-mwindows)                                                 │
+│ Arquitectura: x86_64 (64-bit)                                                 │
+│ Estándar C++: C++11                                                           │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  ✅ Compilación: 340 KB   |   Estado: EXITOSO                 ║
+║                      ¡A jugar fútbol mexicano! ⚽                             ║
+╚════════════════════════════════════════════════════════════════════════════════╝

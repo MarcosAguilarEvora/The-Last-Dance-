@@ -1,9 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Personaje.hpp"
-#include "Enemigo.hpp"
-#include "InterfazUsuario.hpp"
-#include "Entidades.hpp"
+#include "personaje.hpp"
+#include "enemigo.hpp"
+#include "interfazusuario.hpp"
+#include "entidades.hpp"
 #include <vector>
 #include <cstdlib>
 #include <ctime>

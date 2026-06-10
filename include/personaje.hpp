@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Entidades.hpp"
+#include "entidades.hpp"
 #include <vector>
 
 class Personaje {
