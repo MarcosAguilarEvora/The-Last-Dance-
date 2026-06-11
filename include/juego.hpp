@@ -1,9 +1,11 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "personaje.hpp"
 #include "enemigo.hpp"
 #include "interfazusuario.hpp"
 #include "entidades.hpp"
+#include "recursos.hpp"
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -24,6 +26,15 @@ private:
 
     sf::Texture tBalon, tSilbato, tDinero, tFlecha, tTaquetes, tEspinilleras, tGuantes, tBanda, tAmarilla, tRoja;
     sf::Texture tEnemigos[5];
+    sf::Texture tEscenarios[5];
+
+    // Audio
+    sf::Music* musicaFondo;
+    sf::Sound sonidoLanzamiento, sonidoSilbato, sonidoEnemigoDerrota, sonidoDerrota, sonidoVictoria;
+    sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufVictoria;
+
+    // Sprites de escenarios
+    sf::Sprite escenarioActual;
 
     int puntos;
     int nivel;
@@ -47,7 +58,7 @@ private:
     }
 
 public:
-    Juego() : ventana(sf::VideoMode(800, 600), "Futbol Adventure: Liga de Barrio"), estadoActual(GameState::MENU) {
+    Juego() : ventana(sf::VideoMode(800, 600), "Futbol Adventure: Liga de Barrio"), estadoActual(GameState::MENU), musicaFondo(nullptr) {
         std::srand(std::time(nullptr));
         puntos = 0;
         nivel = 1;
@@ -57,16 +68,56 @@ public:
         personajeSeleccionadoIdx = 0;
         jefe = nullptr;
 
-        tBalon.create(20, 20); tSilbato.create(15, 15); tDinero.create(20, 10); tFlecha.create(15, 25);
-        tTaquetes.create(25, 15); tEspinilleras.create(15, 25); tGuantes.create(20, 20); 
-        tBanda.create(25, 10); tAmarilla.create(15, 22); tRoja.create(15, 22);
-        for(int i=0; i<5; ++i) tEnemigos[i].create(60, 60);
-    }
+        // Cargar texturas de proyectiles
+        tBalon = Recursos::cargarTexturaBalon();
+        tSilbato = Recursos::cargarTexturaPowerUp("silbato");
+        tDinero = Recursos::cargarTexturaPowerUp("dinero");
+        tFlecha = Recursos::cargarTexturaPowerUp("flecha");
+        tTaquetes = Recursos::cargarTexturaPowerUp("taquetes");
+        tEspinilleras = Recursos::cargarTexturaPowerUp("espinilleras");
+        tGuantes = Recursos::cargarTexturaPowerUp("guantes");
+        tBanda = Recursos::cargarTexturaPowerUp("banda");
+        tAmarilla = Recursos::cargarTexturaPowerUp("amarilla");
+        tRoja = Recursos::cargarTexturaPowerUp("roja");
 
-    ~Juego() { delete jefe; }
+        // Cargar texturas de enemigos
+        for(int i = 1; i <= 5; ++i) {
+            tEnemigos[i-1] = Recursos::cargarTexturaEnemigo(i);
+        }
+
+        // Cargar texturas de escenarios
+        for(int i = 1; i <= 5; ++i) {
+            tEscenarios[i-1] = Recursos::cargarEscenario(i);
+        }
+
+        // Cargar sonidos
+        bufLanzamiento = Recursos::cargarSonidoLanzamiento();
+        bufSilbato = Recursos::cargarSonidoSilbato();
+        bufEnemigoDerrota = Recursos::cargarSonidoEnemigoDerrota();
+        bufDerrota = Recursos::cargarSonidoDerrota();
+        bufVictoria = Recursos::cargarSonidoVictoria();
+
+        sonidoLanzamiento.setBuffer(bufLanzamiento);
+        sonidoLanzamiento.setVolume(30.f);
+        sonidoSilbato.setBuffer(bufSilbato);
+        sonidoSilbato.setVolume(30.f);
+        sonidoEnemigoDerrota.setBuffer(bufEnemigoDerrota);
+        sonidoEnemigoDerrota.setVolume(50.f);
+        sonidoDerrota.setBuffer(bufDerrota);
+        sonidoDerrota.setVolume(50.f);
+        sonidoVictoria.setBuffer(bufVictoria);
+        sonidoVictoria.setVolume(50.f);
+
+        // Cargar música de fondo
+        musicaFondo = Recursos::cargarMusicaFondo();
+    }
 
     // METODO AJUSTADO A TU PIZARRON
     void Iniciar() {
+        if (musicaFondo) {
+            musicaFondo->play();
+        }
+        
         while (ventana.isOpen()) {
             float dt = relojFrame.restart().asSeconds();
             if (estadoActual == GameState::JUGANDO) tiempoTotalJuego += dt;
@@ -74,6 +125,18 @@ public:
             procesarEventos();
             actualizar(dt);
             renderizar();
+        }
+        
+        if (musicaFondo) {
+            musicaFondo->stop();
+        }
+    }
+
+    ~Juego() { 
+        delete jefe;
+        if (musicaFondo) {
+            musicaFondo->stop();
+            delete musicaFondo;
         }
     }
 
@@ -92,7 +155,13 @@ private:
                 else if (estadoActual == GameState::SELECCION) {
                     if (evento.key.code >= sf::Keyboard::Num0 && evento.key.code <= sf::Keyboard::Num5) {
                         personajeSeleccionadoIdx = evento.key.code - sf::Keyboard::Num0;
-                        jugador.cargarTextura("assets/personajes/" + std::to_string(personajeSeleccionadoIdx) + ".png");
+                        // Cargar textura del personaje usando el sistema de recursos
+                        jugador.textura = Recursos::cargarTexturaPersonaje(personajeSeleccionadoIdx);
+                        jugador.sprite.setTexture(jugador.textura);
+                        jugador.sprite.setOrigin(jugador.textura.getSize().x / 2.f, jugador.textura.getSize().y / 2.f);
+                        jugador.sprite.setPosition(jugador.x, jugador.y);
+                        jugador.sprite.setScale(0.2f, 0.2f);
+                        
                         nivel = 1; puntos = 0; jugador.vidas = 3; tiempoTotalJuego = 0.f;
                         iniciarNivel(nivel);
                         estadoActual = GameState::JUGANDO;
@@ -109,7 +178,10 @@ private:
                 }
                 else if (estadoActual == GameState::JUGANDO) {
                     if (evento.key.code == sf::Keyboard::Up || evento.key.code == sf::Keyboard::W) jugador.saltar();
-                    if (evento.key.code == sf::Keyboard::Space) jugador.lanzarBalon(balones, tBalon);
+                    if (evento.key.code == sf::Keyboard::Space) {
+                        jugador.lanzarBalon(balones, tBalon);
+                        sonidoLanzamiento.play();
+                    }
                 }
             }
         }
@@ -155,14 +227,17 @@ private:
             if (jefe && it->sprite.getGlobalBounds().intersects(jefe->sprite.getGlobalBounds())) {
                 it = balones.erase(it);
                 jefe->vida--;
+                sonidoSilbato.play();
                 if (jefe->vida <= 0) {
                     puntos += 20;
+                    sonidoEnemigoDerrota.play();
                     if (nivel < 5) {
                         nivel++;
                         estadoActual = GameState::PANTALLA_NIVEL;
                         return;
                     } else {
                         estadoActual = GameState::VICTORIA;
+                        sonidoVictoria.play();
                         return;
                     }
                 }
@@ -180,6 +255,7 @@ private:
                     jugador.vidas--;
                     if (jugador.vidas <= 0) {
                         estadoActual = GameState::GAMEOVER;
+                        sonidoDerrota.play();
                         return;
                     }
                 }
@@ -195,6 +271,7 @@ private:
                 poderActivo = it->tipo;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
                     estadoActual = GameState::GAMEOVER;
+                    sonidoDerrota.play();
                     return;
                 }
                 
@@ -239,6 +316,17 @@ private:
             ui.dibujarTexto(ventana, "Presiona [ENTER] para regresar", 220, 480, 20, sf::Color::Yellow);
         }
         else if (estadoActual == GameState::JUGANDO) {
+            // Dibujar escenario de fondo
+            if (nivel >= 1 && nivel <= 5) {
+                escenarioActual.setTexture(tEscenarios[nivel - 1]);
+                escenarioActual.setScale(
+                    800.f / escenarioActual.getLocalBounds().width,
+                    600.f / escenarioActual.getLocalBounds().height
+                );
+                escenarioActual.setPosition(0, 0);
+                ventana.draw(escenarioActual);
+            }
+            
             ventana.draw(jugador.sprite);
             if (jefe) ventana.draw(jefe->sprite);
             for (auto& b : balones) ventana.draw(b.sprite);

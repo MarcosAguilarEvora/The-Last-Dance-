@@ -31,7 +31,7 @@ CXXFLAGS += -mwindows
 # ============================================================================
 # Librerías SFML a enlazar
 # Orden importante: librerías específicas primero, libsfml-main al final
-LIBS := -lsfml-graphics -lsfml-window -lsfml-system -lsfml-main
+LIBS := -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-main
 
 # ============================================================================
 # Nombre del ejecutable
