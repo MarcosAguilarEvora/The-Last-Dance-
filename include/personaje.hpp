@@ -27,12 +27,32 @@ public:
         disparoTriple = false;
     }
 
+    void configurarSprite() {
+        sf::Vector2u size = textura.getSize();
+        int frameW = static_cast<int>(size.x);
+        int frameH = static_cast<int>(size.y);
+
+        if (size.x > size.y * 2) {
+            frameW = static_cast<int>(size.x / 4);
+        } else if (size.y > size.x * 1.2f) {
+            frameH = static_cast<int>(size.y / 2);
+        } else if (size.x > 700 && size.y > 700) {
+            frameW = static_cast<int>(size.x / 2);
+            frameH = static_cast<int>(size.y / 2);
+        }
+
+        sprite.setTexture(textura);
+        sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+        sprite.setOrigin(frameW / 2.f, frameH / 2.f);
+        sprite.setPosition(x, y);
+
+        float escala = 95.f / static_cast<float>(frameH);
+        sprite.setScale(escala, escala);
+    }
+
     void cargarTextura(const std::string& path) {
         if (textura.loadFromFile(path)) {
-            sprite.setTexture(textura);
-            sprite.setOrigin(textura.getSize().x / 2.f, textura.getSize().y / 2.f);
-            sprite.setPosition(x, y);
-            sprite.setScale(0.2f, 0.2f);
+            configurarSprite();
         }
     }
 

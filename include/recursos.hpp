@@ -41,13 +41,20 @@ public:
     // Texturas de proyectiles y power-ups
     static sf::Texture cargarTexturaBalon() {
         sf::Texture tex;
-        tex.create(20, 20);
+        if (!tex.loadFromFile("assets/images/items/balon.png")) {
+            tex.create(20, 20);
+        }
+        tex.setSmooth(true);
         return tex;
     }
 
     static sf::Texture cargarTexturaPowerUp(const std::string& tipo) {
         sf::Texture tex;
-        tex.create(25, 25);
+        std::string path = "assets/images/items/" + tipo + ".png";
+        if (!tex.loadFromFile(path)) {
+            tex.create(25, 25);
+        }
+        tex.setSmooth(true);
         return tex;
     }
 
