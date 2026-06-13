@@ -23,11 +23,12 @@ public:
 class AtaqueEnemigo {
 public:
     sf::Sprite sprite;
+    float vx;
     float velocidad;
     PowerUpType tipoDano; 
 
-    AtaqueEnemigo(float x, float y, float vel, const sf::Texture& tex, PowerUpType tipo = PowerUpType::NINGUNO) 
-        : velocidad(vel), tipoDano(tipo) {
+    AtaqueEnemigo(float x, float y, float vel, const sf::Texture& tex, PowerUpType tipo = PowerUpType::NINGUNO, float vx = 0.f) 
+        : vx(vx), velocidad(vel), tipoDano(tipo) {
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
@@ -35,7 +36,7 @@ public:
     }
 
     void actualizar(float dt) {
-        sprite.move(0.f, velocidad * dt);
+        sprite.move(vx * dt, velocidad * dt);
     }
 };
 

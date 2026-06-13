@@ -5,9 +5,28 @@
 #include <algorithm>
 #include <queue>
 #include <vector>
+#include <climits>
+#include <fstream>
 
 class Recursos {
 public:
+    static bool existeArchivo(const std::string& path) {
+        std::ifstream archivo(path.c_str(), std::ios::binary);
+        return archivo.good();
+    }
+
+    static std::string rutaArchivo(const std::string& path) {
+        if (existeArchivo(path)) return path;
+
+        std::string desdeBin = "../" + path;
+        if (existeArchivo(desdeBin)) return desdeBin;
+
+        std::string desdeSubcarpeta = "../../" + path;
+        if (existeArchivo(desdeSubcarpeta)) return desdeSubcarpeta;
+
+        return path;
+    }
+
     static bool esColorFondoSprite(sf::Color color) {
         if (color.a == 0) return true;
 
@@ -62,7 +81,7 @@ public:
         sf::Texture tex;
         sf::Image imagen;
 
-        if (imagen.loadFromFile(path)) {
+        if (imagen.loadFromFile(rutaArchivo(path))) {
             quitarFondoSprite(imagen);
             tex.loadFromImage(imagen);
         }
@@ -75,7 +94,7 @@ public:
         sf::Texture tex;
         sf::Image imagen;
 
-        if (imagen.loadFromFile(path)) {
+        if (imagen.loadFromFile(rutaArchivo(path))) {
             quitarFondoSprite(imagen);
             tex.loadFromImage(imagen, area);
         }
@@ -84,21 +103,104 @@ public:
         return tex;
     }
 
+    static bool pixelVisible(const sf::Image& imagen, unsigned int x, unsigned int y) {
+        return imagen.getPixel(x, y).a > 20;
+    }
+
+    static sf::Texture cargarTexturaSpriteSheetSinFondo(const std::string& path, int columnas, const sf::IntRect& area = sf::IntRect()) {
+        sf::Texture tex;
+        sf::Image imagen;
+
+        if (!imagen.loadFromFile(rutaArchivo(path)) || columnas <= 0) {
+            tex.create(1, 1);
+            tex.setSmooth(false);
+            return tex;
+        }
+
+        quitarFondoSprite(imagen);
+
+        sf::IntRect zona = area;
+        if (zona.width <= 0 || zona.height <= 0) {
+            zona = sf::IntRect(0, 0, static_cast<int>(imagen.getSize().x), static_cast<int>(imagen.getSize().y));
+        }
+
+        int anchoCelda = zona.width / columnas;
+        int altoCelda = zona.height;
+        std::vector<sf::IntRect> recortes;
+        int maxW = 1;
+        int maxH = 1;
+
+        for (int i = 0; i < columnas; ++i) {
+            int inicioX = zona.left + i * anchoCelda;
+            int finX = (i == columnas - 1) ? zona.left + zona.width : inicioX + anchoCelda;
+            int minX = INT_MAX;
+            int minY = INT_MAX;
+            int maxX = -1;
+            int maxY = -1;
+
+            for (int y = zona.top; y < zona.top + altoCelda; ++y) {
+                for (int x = inicioX; x < finX; ++x) {
+                    if (x < 0 || y < 0 || x >= static_cast<int>(imagen.getSize().x) || y >= static_cast<int>(imagen.getSize().y)) continue;
+                    if (pixelVisible(imagen, static_cast<unsigned int>(x), static_cast<unsigned int>(y))) {
+                        minX = std::min(minX, x);
+                        minY = std::min(minY, y);
+                        maxX = std::max(maxX, x);
+                        maxY = std::max(maxY, y);
+                    }
+                }
+            }
+
+            if (maxX < minX || maxY < minY) {
+                recortes.push_back(sf::IntRect(inicioX, zona.top, anchoCelda, altoCelda));
+            } else {
+                int margen = 4;
+                minX = std::max(zona.left, minX - margen);
+                minY = std::max(zona.top, minY - margen);
+                maxX = std::min(zona.left + zona.width - 1, maxX + margen);
+                maxY = std::min(zona.top + zona.height - 1, maxY + margen);
+                recortes.push_back(sf::IntRect(minX, minY, maxX - minX + 1, maxY - minY + 1));
+                maxW = std::max(maxW, maxX - minX + 1);
+                maxH = std::max(maxH, maxY - minY + 1);
+            }
+        }
+
+        sf::Image hojaNormalizada;
+        hojaNormalizada.create(maxW * columnas, maxH, sf::Color(255, 255, 255, 0));
+
+        for (int i = 0; i < columnas; ++i) {
+            sf::IntRect r = recortes[i];
+            int offsetX = i * maxW + (maxW - r.width) / 2;
+            int offsetY = maxH - r.height;
+
+            for (int y = 0; y < r.height; ++y) {
+                for (int x = 0; x < r.width; ++x) {
+                    sf::Color pixel = imagen.getPixel(static_cast<unsigned int>(r.left + x), static_cast<unsigned int>(r.top + y));
+                    hojaNormalizada.setPixel(static_cast<unsigned int>(offsetX + x), static_cast<unsigned int>(offsetY + y), pixel);
+                }
+            }
+        }
+
+        tex.loadFromImage(hojaNormalizada);
+        tex.setSmooth(false);
+        return tex;
+    }
+
     // Texturas de personajes
     static sf::Texture cargarTexturaPersonaje(int idx) {
         sf::Texture tex;
         std::string nombres[6] = {
-            "assets/images/chicharron/chicharronparado.png",
-            "assets/images/cuau/cuauparado.png",
-            "assets/images/funesmorri/funesmorriparado.png",
-            "assets/images/gino/ginoparado.png",
+            "assets/images/chicharron/chicharronderecha.png",
+            "assets/images/cuau/cuauderecha.png",
+            "assets/images/funesmorri/funesmorriderecha.png",
+            "assets/images/gino/ginoderecha.png",
             "assets/images/lugosanchez/lugosanchezmovimientos.png",
-            "assets/images/chaquetagimenez/chaquetagimenezparado.png"
+            "assets/images/chaquetagimenez/chaquetagimenezizquierdaderecha.png"
         };
-        if (idx == 4) {
-            tex = cargarTexturaSpriteSinFondo(nombres[idx], sf::IntRect(35, 55, 175, 245));
-        } else if (idx >= 0 && idx < 6) {
-            tex = cargarTexturaSpriteSinFondo(nombres[idx]);
+        int columnas[6] = {4, 4, 4, 4, 5, 4};
+        (void)columnas;
+        if (idx >= 0 && idx < 6) {
+            tex.loadFromFile(rutaArchivo(nombres[idx]));
+            tex.setSmooth(false);
         }
         return tex;
     }
@@ -114,7 +216,8 @@ public:
             "assets/images/enemigos/mafia mayor/sprite mafiamayor/mafiamayor.png"
         };
         if (nivel >= 1 && nivel <= 5) {
-            tex = cargarTexturaSpriteSinFondo(nombres[nivel - 1]);
+            tex.loadFromFile(rutaArchivo(nombres[nivel - 1]));
+            tex.setSmooth(false);
         }
         return tex;
     }
@@ -122,7 +225,7 @@ public:
     // Texturas de proyectiles y power-ups
     static sf::Texture cargarTexturaBalon() {
         sf::Texture tex;
-        if (!tex.loadFromFile("assets/images/items/balon.png")) {
+        if (!tex.loadFromFile(rutaArchivo("assets/images/items/balon.png"))) {
             tex.create(20, 20);
         }
         tex.setSmooth(true);
@@ -132,7 +235,7 @@ public:
     static sf::Texture cargarTexturaPowerUp(const std::string& tipo) {
         sf::Texture tex;
         std::string path = "assets/images/items/" + tipo + ".png";
-        if (!tex.loadFromFile(path)) {
+        if (!tex.loadFromFile(rutaArchivo(path))) {
             tex.create(25, 25);
         }
         tex.setSmooth(true);
@@ -142,7 +245,7 @@ public:
     // Música
     static sf::Music* cargarMusicaFondo() {
         sf::Music* musica = new sf::Music();
-        musica->openFromFile("assets/music/musicadefondo/Canciodefondojuego.ogg");
+        musica->openFromFile(rutaArchivo("assets/music/musicadefondo/Canciodefondojuego.ogg"));
         musica->setLoop(true);
         musica->setVolume(50.f);
         return musica;
@@ -150,7 +253,7 @@ public:
 
     static sf::Music* cargarMusicaIntro() {
         sf::Music* musica = new sf::Music();
-        musica->openFromFile("assets/music/musicadefondo/Intro.ogg");
+        musica->openFromFile(rutaArchivo("assets/music/musicadefondo/Intro.ogg"));
         musica->setLoop(true);
         musica->setVolume(50.f);
         return musica;
@@ -159,31 +262,31 @@ public:
     // Sound Buffers (efectos)
     static sf::SoundBuffer cargarSonidoLanzamiento() {
         sf::SoundBuffer buf;
-        buf.loadFromFile("assets/music/Sonidosjuego/Lanzamiento.ogg");
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/Lanzamiento.ogg"));
         return buf;
     }
 
     static sf::SoundBuffer cargarSonidoSilbato() {
         sf::SoundBuffer buf;
-        buf.loadFromFile("assets/music/Sonidosjuego/silbato.ogg");
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/silbato.ogg"));
         return buf;
     }
 
     static sf::SoundBuffer cargarSonidoEnemigoDerrota() {
         sf::SoundBuffer buf;
-        buf.loadFromFile("assets/music/Sonidosjuego/enemigoderrotado.ogg");
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/enemigoderrotado.ogg"));
         return buf;
     }
 
     static sf::SoundBuffer cargarSonidoDerrota() {
         sf::SoundBuffer buf;
-        buf.loadFromFile("assets/music/Sonidosjuego/derrotado.ogg");
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/derrotado.ogg"));
         return buf;
     }
 
     static sf::SoundBuffer cargarSonidoVictoria() {
         sf::SoundBuffer buf;
-        buf.loadFromFile("assets/music/Sonidosjuego/Juegoganado.ogg");
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/Juegoganado.ogg"));
         return buf;
     }
 
@@ -198,7 +301,7 @@ public:
             "assets/images/Escenarios/Escenario5.png"
         };
         if (nivel >= 1 && nivel <= 5) {
-            tex.loadFromFile(nombres[nivel - 1]);
+            tex.loadFromFile(rutaArchivo(nombres[nivel - 1]));
         }
         return tex;
     }

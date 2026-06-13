@@ -16,6 +16,7 @@ enum class GameState { MENU, PERSONAJES, GALERIA, INSTRUCCIONES, JUGANDO, PANTAL
 
 class Juego {
 private:
+    static const bool AUDIO_ACTIVO = false;
     sf::RenderWindow ventana;
     GameState estadoActual;
     Personaje jugador;
@@ -36,8 +37,11 @@ private:
     sf::Music* musicaFondo;
     sf::Music* musicaMenu;
     bool musicaJuegoActiva;
-    sf::Sound sonidoLanzamiento, sonidoSilbato, sonidoEnemigoDerrota, sonidoDerrota, sonidoVictoria, sonidoHover;
-    sf::Sound sonidosMuerteJefe[5];
+    sf::Sound *sonidoLanzamiento, *sonidoSilbato, *sonidoEnemigoDerrota, *sonidoDerrota, *sonidoVictoria, *sonidoHover;
+    sf::Sound* sonidosJugador[6];
+    sf::Sound* sonidosGolpeJugador[6];
+    sf::Sound* sonidosGolpeJefe[5];
+    sf::Sound* sonidosMuerteJefe[5];
     sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufVictoria;
 
     // Sprites de escenarios
@@ -55,6 +59,7 @@ private:
     float tiempoFlashJefe;
     float tiempoSacudida;
     float tiempoSpawnPowerUp;
+    float tiempoDisparoJugador;
     int ultimoJefeDerrotado;
 
     std::string nombresEnemigos[5] = {"Katie Itzel", "Gata Ortencia", "Telecomerciales", "Funko Arreola", "Mafia Mayor"};
@@ -72,6 +77,7 @@ private:
         jugador.desactivarPowerUps();
         poderActivo = PowerUpType::NINGUNO;
         tiempoSpawnPowerUp = 0.f;
+        tiempoDisparoJugador = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
     }
@@ -169,10 +175,28 @@ private:
         return -1;
     }
 
+    int columnasPersonaje(int idx) {
+        return idx == 4 ? 5 : 4;
+    }
+
+    sf::Sound* crearSonido(sf::SoundBuffer& buffer, float volumen, float tono = 1.f) {
+        if (!AUDIO_ACTIVO) return nullptr;
+
+        sf::Sound* sonido = new sf::Sound();
+        sonido->setBuffer(buffer);
+        sonido->setVolume(volumen);
+        sonido->setPitch(tono);
+        return sonido;
+    }
+
+    void reproducirSonido(sf::Sound* sonido) {
+        if (AUDIO_ACTIVO && sonido) sonido->play();
+    }
+
     void reproducirHoverSiCambio(int nuevoHover, int& hoverActual) {
         if (nuevoHover != hoverActual) {
             hoverActual = nuevoHover;
-            if (nuevoHover >= 0) sonidoHover.play();
+            if (nuevoHover >= 0) reproducirSonido(sonidoHover);
         }
     }
 
@@ -200,16 +224,25 @@ private:
         jugador.velocidadY = 0.f;
         jugador.enElSuelo = true;
         jugador.desactivarPowerUps();
-        jugador.configurarSprite();
+        jugador.configurarSprite(columnasPersonaje(personajeSeleccionadoIdx));
 
         nivel = 1;
         puntos = 0;
         jugador.vidas = 3;
         tiempoTotalJuego = 0.f;
+        tiempoDisparoJugador = 0.f;
         iniciarNivel(nivel);
         estadoActual = GameState::JUGANDO;
         opcionMenuHover = -1;
         personajeHover = -1;
+    }
+
+    void intentarLanzarBalon() {
+        if (tiempoDisparoJugador > 0.f || balones.size() >= 3) return;
+
+        jugador.lanzarBalon(balones, tBalon);
+        reproducirSonido(sonidosJugador[personajeSeleccionadoIdx]);
+        tiempoDisparoJugador = jugador.disparoTriple ? 0.55f : 0.34f;
     }
 
     void ejecutarOpcionMenu(int opcion) {
@@ -400,6 +433,10 @@ private:
             ventana.draw(card);
 
             sf::Sprite preview(tPersonajes[i]);
+            int columnas = columnasPersonaje(i);
+            if (columnas > 0) {
+                preview.setTextureRect(sf::IntRect(0, 0, static_cast<int>(tPersonajes[i].getSize().x) / columnas, static_cast<int>(tPersonajes[i].getSize().y)));
+            }
             sf::FloatRect bounds = preview.getLocalBounds();
             if (bounds.width > 0.f && bounds.height > 0.f) {
                 preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
@@ -585,6 +622,8 @@ private:
     }
 
     void actualizarMusica() {
+        if (!AUDIO_ACTIVO) return;
+
         bool usarMusicaJuego = estadoActual == GameState::JUGANDO || estadoActual == GameState::PANTALLA_NIVEL;
         sf::Music* musicaActiva = usarMusicaJuego ? musicaFondo : musicaMenu;
         sf::Music* musicaPausada = usarMusicaJuego ? musicaMenu : musicaFondo;
@@ -605,7 +644,19 @@ private:
     }
 
 public:
-    Juego() : ventana(sf::VideoMode(800, 600), "Futbol Adventure: Liga de Barrio"), estadoActual(GameState::MENU), musicaFondo(nullptr), musicaMenu(nullptr), musicaJuegoActiva(false) {
+    Juego() : ventana(sf::VideoMode(800, 600), "Futbol Adventure: Liga de Barrio"), estadoActual(GameState::MENU), musicaFondo(nullptr), musicaMenu(nullptr), musicaJuegoActiva(false),
+              sonidoLanzamiento(nullptr), sonidoSilbato(nullptr), sonidoEnemigoDerrota(nullptr), sonidoDerrota(nullptr), sonidoVictoria(nullptr), sonidoHover(nullptr) {
+        ventana.setVisible(true);
+        ventana.setPosition(sf::Vector2i(80, 80));
+        ventana.setFramerateLimit(60);
+        ventana.requestFocus();
+        ventana.setKeyRepeatEnabled(false);
+
+        ventana.clear(sf::Color(8, 24, 28));
+        ui.dibujarTexto(ventana, "CARGANDO THE LAST DANCE...", 230.f, 260.f, 26, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "Preparando estadio y personajes", 255.f, 305.f, 18, sf::Color::White);
+        ventana.display();
+
         std::srand(std::time(nullptr));
         puntos = 0;
         nivel = 1;
@@ -616,12 +667,21 @@ public:
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
         tiempoSpawnPowerUp = 0.f;
+        tiempoDisparoJugador = 0.f;
         ultimoJefeDerrotado = 0;
         poderActivo = PowerUpType::NINGUNO;
         personajeSeleccionadoIdx = 0;
         opcionMenuHover = -1;
         personajeHover = -1;
         jefe = nullptr;
+        for (int i = 0; i < 6; ++i) {
+            sonidosJugador[i] = nullptr;
+            sonidosGolpeJugador[i] = nullptr;
+        }
+        for (int i = 0; i < 5; ++i) {
+            sonidosGolpeJefe[i] = nullptr;
+            sonidosMuerteJefe[i] = nullptr;
+        }
 
         // Cargar texturas de proyectiles
         tBalon = Recursos::cargarTexturaBalon();
@@ -650,9 +710,10 @@ public:
             tEscenarios[i-1] = Recursos::cargarEscenario(i);
         }
 
-        tMenuFondo.loadFromFile("assets/images/Portadajuego.png");
+        tMenuFondo.loadFromFile(Recursos::rutaArchivo("assets/images/Portadajuego.png"));
         tMenuFondo.setSmooth(true);
 
+        if (AUDIO_ACTIVO) {
         // Cargar sonidos
         bufLanzamiento = Recursos::cargarSonidoLanzamiento();
         bufSilbato = Recursos::cargarSonidoSilbato();
@@ -660,29 +721,30 @@ public:
         bufDerrota = Recursos::cargarSonidoDerrota();
         bufVictoria = Recursos::cargarSonidoVictoria();
 
-        sonidoLanzamiento.setBuffer(bufLanzamiento);
-        sonidoLanzamiento.setVolume(30.f);
-        sonidoSilbato.setBuffer(bufSilbato);
-        sonidoSilbato.setVolume(30.f);
-        sonidoEnemigoDerrota.setBuffer(bufEnemigoDerrota);
-        sonidoEnemigoDerrota.setVolume(50.f);
-        sonidoDerrota.setBuffer(bufDerrota);
-        sonidoDerrota.setVolume(50.f);
-        sonidoVictoria.setBuffer(bufVictoria);
-        sonidoVictoria.setVolume(50.f);
-        sonidoHover.setBuffer(bufSilbato);
-        sonidoHover.setVolume(15.f);
+            sonidoLanzamiento = crearSonido(bufLanzamiento, 30.f);
+            sonidoSilbato = crearSonido(bufSilbato, 30.f);
+            sonidoEnemigoDerrota = crearSonido(bufEnemigoDerrota, 50.f);
+            sonidoDerrota = crearSonido(bufDerrota, 50.f);
+            sonidoVictoria = crearSonido(bufVictoria, 50.f);
+            sonidoHover = crearSonido(bufSilbato, 15.f);
 
-        float tonosMuerte[5] = {0.82f, 0.95f, 1.08f, 1.22f, 1.38f};
-        for (int i = 0; i < 5; ++i) {
-            sonidosMuerteJefe[i].setBuffer(bufEnemigoDerrota);
-            sonidosMuerteJefe[i].setVolume(55.f);
-            sonidosMuerteJefe[i].setPitch(tonosMuerte[i]);
+            float tonosJugador[6] = {0.82f, 0.94f, 1.06f, 1.18f, 1.30f, 1.44f};
+            float tonosGolpeJugador[6] = {0.72f, 0.84f, 0.96f, 1.08f, 1.20f, 1.32f};
+            for (int i = 0; i < 6; ++i) {
+                sonidosJugador[i] = crearSonido(bufLanzamiento, 32.f, tonosJugador[i]);
+                sonidosGolpeJugador[i] = crearSonido(bufDerrota, 45.f, tonosGolpeJugador[i]);
+            }
+
+            float tonosMuerte[5] = {0.82f, 0.95f, 1.08f, 1.22f, 1.38f};
+            for (int i = 0; i < 5; ++i) {
+                sonidosGolpeJefe[i] = crearSonido(bufSilbato, 34.f, tonosMuerte[i] + 0.18f);
+                sonidosMuerteJefe[i] = crearSonido(bufEnemigoDerrota, 55.f, tonosMuerte[i]);
         }
 
         // Cargar música
         musicaFondo = Recursos::cargarMusicaFondo();
         musicaMenu = Recursos::cargarMusicaIntro();
+        }
     }
 
     // METODO AJUSTADO A TU PIZARRON
@@ -709,6 +771,20 @@ public:
 
     ~Juego() { 
         delete jefe;
+        delete sonidoLanzamiento;
+        delete sonidoSilbato;
+        delete sonidoEnemigoDerrota;
+        delete sonidoDerrota;
+        delete sonidoVictoria;
+        delete sonidoHover;
+        for (int i = 0; i < 6; ++i) {
+            delete sonidosJugador[i];
+            delete sonidosGolpeJugador[i];
+        }
+        for (int i = 0; i < 5; ++i) {
+            delete sonidosGolpeJefe[i];
+            delete sonidosMuerteJefe[i];
+        }
         if (musicaFondo) {
             musicaFondo->stop();
             delete musicaFondo;
@@ -754,7 +830,7 @@ private:
                     if (evento.key.code == sf::Keyboard::Num1) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::Num2) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::Num3) ejecutarOpcionMenu(2);
-                    if (evento.key.code == sf::Keyboard::Num4 || evento.key.code == sf::Keyboard::Escape) ejecutarOpcionMenu(3);
+                    if (evento.key.code == sf::Keyboard::Num4) opcionMenuHover = 3;
                     if (evento.key.code == sf::Keyboard::P) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::E) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::I) ejecutarOpcionMenu(2);
@@ -776,9 +852,8 @@ private:
                 }
                 else if (estadoActual == GameState::JUGANDO) {
                     if (evento.key.code == sf::Keyboard::Up || evento.key.code == sf::Keyboard::W) jugador.saltar();
-                    if (evento.key.code == sf::Keyboard::Space) {
-                        jugador.lanzarBalon(balones, tBalon);
-                        sonidoLanzamiento.play();
+                    if (evento.key.code == sf::Keyboard::Space || evento.key.code == sf::Keyboard::Enter) {
+                        intentarLanzarBalon();
                     }
                 }
             }
@@ -788,6 +863,7 @@ private:
     void actualizar(float dt) {
         if (estadoActual != GameState::JUGANDO) return;
 
+        if (tiempoDisparoJugador > 0.f) tiempoDisparoJugador -= dt;
         if (tiempoFlashJefe > 0.f) tiempoFlashJefe -= dt;
         if (tiempoSacudida > 0.f) tiempoSacudida -= dt;
 
@@ -798,7 +874,7 @@ private:
 
         if (jefe) {
             jefe->actualizar(dt);
-            jefe->atacar(dt, ataques, texturaProyectilEnemigo());
+            jefe->atacar(dt, ataques, texturaProyectilEnemigo(), jugador.x);
         }
 
         if (poderActivo != PowerUpType::NINGUNO) {
@@ -810,8 +886,8 @@ private:
         }
 
         tiempoSpawnPowerUp += dt;
-        if (tiempoSpawnPowerUp >= 6.5f) {
-            tiempoSpawnPowerUp -= 6.5f;
+        if (tiempoSpawnPowerUp >= 8.5f) {
+            tiempoSpawnPowerUp -= 8.5f;
             generarPowerUp();
         }
 
@@ -827,13 +903,13 @@ private:
             if (jefe && it->sprite.getGlobalBounds().intersects(jefe->sprite.getGlobalBounds())) {
                 it = balones.erase(it);
                 jefe->vida--;
-                sonidoSilbato.play();
+                reproducirSonido(sonidosGolpeJefe[std::max(0, std::min(4, nivel - 1))]);
                 tiempoFlashJefe = 0.18f;
                 tiempoSacudida = 0.10f;
                 if (jefe->vida <= 0) {
                     puntos += 20;
                     ultimoJefeDerrotado = std::max(0, std::min(4, nivel - 1));
-                    sonidosMuerteJefe[ultimoJefeDerrotado].play();
+                    reproducirSonido(sonidosMuerteJefe[ultimoJefeDerrotado]);
                     if (nivel < 5) {
                         nivel++;
                         tiempoTransicionNivel = 0.f;
@@ -841,7 +917,7 @@ private:
                         return;
                     } else {
                         estadoActual = GameState::VICTORIA;
-                        sonidoVictoria.play();
+                        reproducirSonido(sonidoVictoria);
                         return;
                     }
                 }
@@ -855,11 +931,13 @@ private:
         for (auto it = ataques.begin(); it != ataques.end();) {
             if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
                 it = ataques.erase(it);
-                if (!jugador.invencible) {
+                if (!jugador.invencible && !jugador.estaDerribado()) {
                     jugador.vidas--;
+                    jugador.derribar(jugador.x - (jefe ? jefe->x : jugador.x));
+                    reproducirSonido(sonidosGolpeJugador[personajeSeleccionadoIdx]);
                     if (jugador.vidas <= 0) {
                         estadoActual = GameState::GAMEOVER;
-                        sonidoDerrota.play();
+                        reproducirSonido(sonidoDerrota);
                         return;
                     }
                 }
@@ -875,7 +953,7 @@ private:
                 poderActivo = it->tipo;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
                     estadoActual = GameState::GAMEOVER;
-                    sonidoDerrota.play();
+                    reproducirSonido(sonidoDerrota);
                     return;
                 }
                 
@@ -970,6 +1048,13 @@ private:
                 ventana.draw(escenarioActual);
             }
             
+            sf::CircleShape sombraJugador(36.f);
+            sombraJugador.setOrigin(36.f, 10.f);
+            sombraJugador.setScale(1.35f, 0.28f);
+            sombraJugador.setPosition(jugador.x, 548.f);
+            sombraJugador.setFillColor(sf::Color(0, 0, 0, 115));
+            ventana.draw(sombraJugador);
+
             ventana.draw(jugador.sprite);
             if (jefe) {
                 sf::Sprite jefeAnimado = jefe->sprite;
