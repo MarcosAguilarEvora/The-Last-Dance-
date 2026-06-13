@@ -20,12 +20,12 @@ public:
     Enemigo(std::string nom, int nvl, const sf::Texture& tex) {
         nombre = nom;
         nivel = nvl;
-        vida = 20;
-        velocidad = 150.f + (nvl * 45.f); 
+        vida = 18 + (nvl * 4);
+        velocidad = 155.f + (nvl * 55.f); 
         x = 400.f; y = 100.f;
         direccion = 1;
         tempAtaque = 0.f;
-        intervaloAtaque = 1.5f;
+        intervaloAtaque = calcularIntervaloAtaque();
         
         textura = tex;
         sf::Vector2u size = textura.getSize();
@@ -44,6 +44,19 @@ public:
         sprite.setScale(0.32f, 0.32f);
     }
 
+    float calcularIntervaloAtaque() const {
+        float intervalo = 1.45f - ((nivel - 1) * 0.20f);
+        return intervalo < 0.65f ? 0.65f : intervalo;
+    }
+
+    float calcularVelocidadProyectil() const {
+        return 360.f + (nivel * 95.f);
+    }
+
+    int maxAtaquesActivos() const {
+        return 1 + (nivel / 3);
+    }
+
     void actualizar(float dt) {
         x += direccion * velocidad * dt;
         if (x > 730.f) { x = 730.f; direccion = -1; }
@@ -56,12 +69,12 @@ public:
     }
 
     void atacar(float dt, std::vector<AtaqueEnemigo>& ataques, const sf::Texture& texProyectil) {
-        if (!ataques.empty()) return;
+        if (ataques.size() >= static_cast<size_t>(maxAtaquesActivos())) return;
 
         tempAtaque += dt;
         if (tempAtaque >= intervaloAtaque) {
             tempAtaque = 0.f;
-            ataques.push_back(AtaqueEnemigo(x, sprite.getPosition().y + 30.f, 320.f + (nivel * 75.f), texProyectil));
+            ataques.push_back(AtaqueEnemigo(x, sprite.getPosition().y + 30.f, calcularVelocidadProyectil(), texProyectil));
         }
     }
 };
