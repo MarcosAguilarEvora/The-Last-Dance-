@@ -77,6 +77,64 @@ public:
         }
     }
 
+    static void quitarFondoGrisSprite(sf::Image& imagen) {
+        sf::Vector2u size = imagen.getSize();
+        for (unsigned int y = 0; y < size.y; ++y) {
+            for (unsigned int x = 0; x < size.x; ++x) {
+                sf::Color color = imagen.getPixel(x, y);
+                int maximo = std::max(static_cast<int>(color.r), std::max(static_cast<int>(color.g), static_cast<int>(color.b)));
+                int minimo = std::min(static_cast<int>(color.r), std::min(static_cast<int>(color.g), static_cast<int>(color.b)));
+                int promedio = (static_cast<int>(color.r) + static_cast<int>(color.g) + static_cast<int>(color.b)) / 3;
+
+                if (maximo - minimo <= 18 && promedio >= 80 && promedio <= 205) {
+                    imagen.setPixel(x, y, sf::Color(255, 255, 255, 0));
+                }
+            }
+        }
+    }
+
+    static void aplicarContornoSprite(sf::Image& imagen) {
+        sf::Vector2u size = imagen.getSize();
+        if (size.x < 3 || size.y < 3) return;
+
+        sf::Image original = imagen;
+        for (unsigned int y = 1; y + 1 < size.y; ++y) {
+            for (unsigned int x = 1; x + 1 < size.x; ++x) {
+                if (original.getPixel(x, y).a != 0) continue;
+
+                bool vecinoVisible =
+                    original.getPixel(x - 1, y).a > 30 ||
+                    original.getPixel(x + 1, y).a > 30 ||
+                    original.getPixel(x, y - 1).a > 30 ||
+                    original.getPixel(x, y + 1).a > 30;
+
+                if (vecinoVisible) {
+                    imagen.setPixel(x, y, sf::Color(12, 12, 12, 185));
+                }
+            }
+        }
+    }
+
+    static sf::Texture cargarTexturaSpriteRapida(const std::string& path, const sf::IntRect& area = sf::IntRect()) {
+        sf::Texture tex;
+        sf::Image imagen;
+
+        if (imagen.loadFromFile(rutaArchivo(path))) {
+            quitarFondoGrisSprite(imagen);
+            aplicarContornoSprite(imagen);
+            if (area.width > 0 && area.height > 0) {
+                tex.loadFromImage(imagen, area);
+            } else {
+                tex.loadFromImage(imagen);
+            }
+        } else {
+            tex.create(32, 32);
+        }
+
+        tex.setSmooth(false);
+        return tex;
+    }
+
     static sf::Texture cargarTexturaSpriteSinFondo(const std::string& path) {
         sf::Texture tex;
         sf::Image imagen;
@@ -189,15 +247,13 @@ public:
     static sf::Texture cargarTexturaPersonaje(int idx) {
         sf::Texture tex;
         std::string nombres[6] = {
-            "assets/images/chicharron/chicharronderecha.png",
-            "assets/images/cuau/cuauderecha.png",
-            "assets/images/funesmorri/funesmorriderecha.png",
-            "assets/images/gino/ginoderecha.png",
-            "assets/images/lugosanchez/lugosanchezmovimientos.png",
-            "assets/images/chaquetagimenez/chaquetagimenezizquierdaderecha.png"
+            "assets/images/optimizadas/personajes/chicharron.png",
+            "assets/images/optimizadas/personajes/cuau.png",
+            "assets/images/optimizadas/personajes/funesmorri.png",
+            "assets/images/optimizadas/personajes/gino.png",
+            "assets/images/optimizadas/personajes/lugosanchez.png",
+            "assets/images/optimizadas/personajes/chaquetagimenez.png"
         };
-        int columnas[6] = {4, 4, 4, 4, 5, 4};
-        (void)columnas;
         if (idx >= 0 && idx < 6) {
             tex.loadFromFile(rutaArchivo(nombres[idx]));
             tex.setSmooth(false);
@@ -209,11 +265,11 @@ public:
     static sf::Texture cargarTexturaEnemigo(int nivel) {
         sf::Texture tex;
         std::string nombres[5] = {
-            "assets/images/enemigos/katie itzel/sprite katieitzel/katieitzel.png",
-            "assets/images/enemigos/gata ortencia/sprite gataortencia/gataortencia.png",
-            "assets/images/enemigos/telecomeriales/sprite telecomerciales/telecomerciales.png",
-            "assets/images/enemigos/funko arreola/sprite funkoarreola/funkoarreola.png",
-            "assets/images/enemigos/mafia mayor/sprite mafiamayor/mafiamayor.png"
+            "assets/images/optimizadas/enemigos/katieitzel.png",
+            "assets/images/optimizadas/enemigos/gataortencia.png",
+            "assets/images/optimizadas/enemigos/telecomerciales.png",
+            "assets/images/optimizadas/enemigos/funkoarreola.png",
+            "assets/images/optimizadas/enemigos/mafiamayor.png"
         };
         if (nivel >= 1 && nivel <= 5) {
             tex.loadFromFile(rutaArchivo(nombres[nivel - 1]));

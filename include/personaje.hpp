@@ -71,10 +71,10 @@ public:
         tiempoAnimacion = 0.f;
         sprite.setTexture(textura);
         sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-        sprite.setOrigin(frameW / 2.f, frameH / 2.f);
+        sprite.setOrigin(frameW / 2.f, frameH * 0.92f);
         sprite.setPosition(x, y);
 
-        float escala = 95.f / static_cast<float>(frameH);
+        float escala = 105.f / static_cast<float>(frameH);
         sprite.setScale(escala, escala);
     }
 
@@ -119,7 +119,7 @@ public:
         if (derribado) {
             frameActual = 0;
             sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
-            float escala = 95.f / static_cast<float>(frameH);
+            float escala = 105.f / static_cast<float>(frameH);
             sprite.setScale(mirandoDerecha ? escala : -escala, escala * 0.82f);
             moviendo = false;
             return;
@@ -140,7 +140,7 @@ public:
         }
 
         sprite.setTextureRect(sf::IntRect(frameActual * frameW, 0, frameW, frameH));
-        float escala = 95.f / static_cast<float>(frameH);
+        float escala = 105.f / static_cast<float>(frameH);
         sprite.setScale(mirandoDerecha ? escala : -escala, escala);
         sprite.setRotation(0.f);
         moviendo = false;
