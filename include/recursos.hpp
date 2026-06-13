@@ -70,6 +70,7 @@ public:
     static sf::Music* cargarMusicaIntro() {
         sf::Music* musica = new sf::Music();
         musica->openFromFile("assets/music/musicadefondo/Intro.ogg");
+        musica->setLoop(true);
         musica->setVolume(50.f);
         return musica;
     }
