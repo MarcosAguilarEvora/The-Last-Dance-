@@ -34,7 +34,7 @@ public:
 
         if (size.x > size.y * 2) {
             frameW = static_cast<int>(size.x / 4);
-        } else if (size.y > size.x * 1.2f) {
+        } else if (size.y > 500 && size.y > size.x * 1.2f) {
             frameH = static_cast<int>(size.y / 2);
         } else if (size.x > 700 && size.y > 700) {
             frameW = static_cast<int>(size.x / 2);
