@@ -23,7 +23,7 @@ CXXFLAGS := -I$(INCLUDE_DIR)
 MINGW_LIB := -LC:\msys64\mingw64\lib
 
 # Flags de optimización y advertencias
-CXXFLAGS += -Wall -Wextra -std=c++11
+CXXFLAGS += -Wall -Wextra -std=c++11 -MMD -MP
 
 # Modo Windows (GUI, no consola)
 CXXFLAGS += -mwindows
@@ -41,6 +41,7 @@ TARGET := $(BIN_DIR)/FutbolJuego.exe
 # Archivos fuente y objetos
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+DEPS := $(OBJECTS:.o=.d)
 
 # ============================================================================
 # REGLAS DE COMPILACIÓN
@@ -127,3 +128,5 @@ help:
 # ============================================================================
 # Marcar reglas que no generan archivos con ese nombre
 .PHONY: all clean clean-obj clean-bin info help
+
+-include $(DEPS)

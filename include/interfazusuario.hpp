@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "entidades.hpp"
+#include "recursos.hpp"
 #include <iostream>
 
 class InterfazUsuario {
@@ -8,7 +9,7 @@ public:
     sf::Font fuente;
 
     InterfazUsuario() {
-        if (!fuente.loadFromFile("assets/fuentes/Arial.ttf")) {
+        if (!fuente.loadFromFile(Recursos::rutaArchivo("assets/fuentes/Arial.ttf"))) {
             fuente.loadFromFile("C:/Windows/Fonts/arial.ttf");
         }
     }
