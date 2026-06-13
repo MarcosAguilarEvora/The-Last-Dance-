@@ -28,10 +28,20 @@ public:
         intervaloAtaque = 1.5f;
         
         textura = tex;
+        sf::Vector2u size = textura.getSize();
+        int frameW = static_cast<int>(size.x);
+        int frameH = static_cast<int>(size.y);
+
+        if (size.x > 0 && size.y > 0) {
+            frameW = static_cast<int>(size.x / 3);
+            frameH = static_cast<int>(size.y / 2);
+        }
+
         sprite.setTexture(textura);
-        sprite.setOrigin(textura.getSize().x / 2.f, textura.getSize().y / 2.f);
+        sprite.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
+        sprite.setOrigin(frameW / 2.f, frameH / 2.f);
         sprite.setPosition(x, y);
-        sprite.setScale(0.25f, 0.25f);
+        sprite.setScale(0.32f, 0.32f);
     }
 
     void actualizar(float dt) {
@@ -40,7 +50,7 @@ public:
         if (x < 70.f) { x = 70.f; direccion = 1; }
         
         float flotarY = 100.f + std::sin(x * (0.045f + nivel * 0.004f)) * (12.f + nivel * 3.f);
-        float escala = 0.25f + std::sin(x * 0.03f) * 0.015f;
+        float escala = 0.32f + std::sin(x * 0.03f) * 0.015f;
         sprite.setPosition(x, flotarY);
         sprite.setScale(escala, escala);
     }

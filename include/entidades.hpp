@@ -43,8 +43,9 @@ class PowerUp {
 public:
     sf::Sprite sprite;
     PowerUpType tipo;
+    float velocidadY;
 
-    PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex) : tipo(t) {
+    PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex, float velY = 0.f) : tipo(t), velocidadY(velY) {
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
@@ -52,6 +53,6 @@ public:
     }
 
     void actualizar(float dt) {
-        sprite.move(0.f, 150.f * dt);
+        sprite.move(0.f, velocidadY * dt);
     }
 };

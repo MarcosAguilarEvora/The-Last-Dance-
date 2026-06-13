@@ -12,7 +12,7 @@
 #include <cmath>
 #include <algorithm>
 
-enum class GameState { MENU, SELECCION, GALERIA, JUGANDO, PANTALLA_NIVEL, VICTORIA, GAMEOVER };
+enum class GameState { MENU, PERSONAJES, GALERIA, INSTRUCCIONES, JUGANDO, PANTALLA_NIVEL, VICTORIA, GAMEOVER };
 
 class Juego {
 private:
@@ -28,6 +28,7 @@ private:
 
     sf::Texture tBalon, tSilbato, tDinero, tFlecha, tTaquetes, tEspinilleras, tGuantes, tBanda, tAmarilla, tRoja;
     sf::Texture tEnemigos[5];
+    sf::Texture tPersonajes[6];
     sf::Texture tEscenarios[5];
     sf::Texture tMenuFondo;
 
@@ -53,6 +54,7 @@ private:
     float tiempoTransicionNivel;
     float tiempoFlashJefe;
     float tiempoSacudida;
+    float tiempoSpawnPowerUp;
     int ultimoJefeDerrotado;
 
     std::string nombresEnemigos[5] = {"Katie Itzel", "Gata Ortencia", "Telecomerciales", "Funko Arreola", "Mafia Mayor"};
@@ -69,6 +71,7 @@ private:
         powerups.clear();
         jugador.desactivarPowerUps();
         poderActivo = PowerUpType::NINGUNO;
+        tiempoSpawnPowerUp = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
     }
@@ -89,6 +92,19 @@ private:
         if (nivel == 3 || nivel == 5) return tDinero;
         if (nivel == 4) return tFlecha;
         return tSilbato;
+    }
+
+    void generarPowerUp() {
+        PowerUpType randomTipo = static_cast<PowerUpType>((std::rand() % 6) + 1);
+        float posicionesY[4] = {520.f, 455.f, 405.f, 365.f};
+        float x = static_cast<float>(std::rand() % 680 + 60);
+        float y = posicionesY[std::rand() % 4];
+
+        if (powerups.size() >= 4) {
+            powerups.erase(powerups.begin());
+        }
+
+        powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo)));
     }
 
     void dibujarFondoMenu() {
@@ -130,17 +146,17 @@ private:
     }
 
     sf::FloatRect rectBotonMenu(int opcion) {
-        return sf::FloatRect(430.f, 325.f + opcion * 58.f, 315.f, 48.f);
+        return sf::FloatRect(0.f, 245.f + opcion * 66.f, 350.f, 56.f);
     }
 
     sf::FloatRect rectPersonaje(int idx) {
-        int col = idx % 2;
-        int row = idx / 2;
-        return sf::FloatRect(105.f + col * 330.f, 185.f + row * 82.f, 275.f, 58.f);
+        int col = idx % 3;
+        int row = idx / 3;
+        return sf::FloatRect(75.f + col * 225.f, 170.f + row * 145.f, 190.f, 112.f);
     }
 
     int opcionMenuEn(sf::Vector2f punto) {
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (rectBotonMenu(i).contains(punto)) return i;
         }
         return -1;
@@ -162,11 +178,14 @@ private:
 
     void actualizarHover(sf::Vector2f punto) {
         if (estadoActual == GameState::MENU) {
-            reproducirHoverSiCambio(opcionMenuEn(punto), opcionMenuHover);
-            personajeHover = -1;
-        } else if (estadoActual == GameState::SELECCION) {
-            reproducirHoverSiCambio(personajeEn(punto), personajeHover);
-            opcionMenuHover = -1;
+            int nuevoPersonajeHover = -1;
+            int nuevoOpcionHover = opcionMenuEn(punto);
+            reproducirHoverSiCambio(nuevoOpcionHover, opcionMenuHover);
+            reproducirHoverSiCambio(nuevoPersonajeHover, personajeHover);
+        } else if (estadoActual == GameState::PERSONAJES) {
+            int nuevoPersonajeHover = personajeEn(punto);
+            reproducirHoverSiCambio(-1, opcionMenuHover);
+            reproducirHoverSiCambio(nuevoPersonajeHover, personajeHover);
         } else {
             opcionMenuHover = -1;
             personajeHover = -1;
@@ -194,9 +213,10 @@ private:
     }
 
     void ejecutarOpcionMenu(int opcion) {
-        if (opcion == 0) estadoActual = GameState::SELECCION;
+        if (opcion == 0) estadoActual = GameState::PERSONAJES;
         else if (opcion == 1) estadoActual = GameState::GALERIA;
-        else if (opcion == 2) ventana.close();
+        else if (opcion == 2) estadoActual = GameState::INSTRUCCIONES;
+        else if (opcion == 3) ventana.close();
         opcionMenuHover = -1;
         personajeHover = -1;
     }
@@ -283,6 +303,149 @@ private:
         ui.dibujarTexto(ventana, "5 RIVALES", 190.f, 516.f, 17, sf::Color(80, 210, 255));
         ui.dibujarTexto(ventana, "100 PTS", 305.f, 516.f, 17, sf::Color(110, 245, 150));
         ui.dibujarTexto(ventana, "Mueve el cursor y haz click para elegir.", 68.f, 543.f, 13, sf::Color(230, 230, 230));
+    }
+
+    void dibujarInstruccionesPortada() {
+        sf::RectangleShape caja(sf::Vector2f(380.f, 112.f));
+        caja.setPosition(58.f, 268.f);
+        caja.setFillColor(sf::Color(8, 20, 18, 210));
+        caja.setOutlineColor(sf::Color(110, 245, 150, 170));
+        caja.setOutlineThickness(2.f);
+        ventana.draw(caja);
+
+        ui.dibujarTexto(ventana, "INSTRUCCIONES", 76.f, 282.f, 18, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "1-6 / click: elegir futbolista", 76.f, 310.f, 14, sf::Color::White);
+        ui.dibujarTexto(ventana, "Flechas: moverte  |  W/Arriba: saltar", 76.f, 334.f, 14, sf::Color::White);
+        ui.dibujarTexto(ventana, "Espacio: lanzar balon", 76.f, 358.f, 14, sf::Color::White);
+    }
+
+    void dibujarSelectorPersonajesPortada() {
+        sf::RectangleShape panel(sf::Vector2f(292.f, 276.f));
+        panel.setPosition(474.f, 70.f);
+        panel.setFillColor(sf::Color(0, 0, 0, 155));
+        panel.setOutlineColor(sf::Color(245, 210, 65, 190));
+        panel.setOutlineThickness(2.f);
+        ventana.draw(panel);
+
+        dibujarTextoSombra("ELIGE TU FUTBOLISTA", 492.f, 88.f, 23, sf::Color::White);
+        ui.dibujarTexto(ventana, "Selecciona desde la portada para iniciar.", 492.f, 116.f, 12, sf::Color(210, 240, 220));
+
+        for(int i = 0; i < 6; ++i) {
+            sf::FloatRect rect = rectPersonaje(i);
+            bool hover = personajeHover == i;
+
+            sf::RectangleShape sombra(sf::Vector2f(rect.width, rect.height));
+            sombra.setPosition(rect.left + 4.f, rect.top + 5.f);
+            sombra.setFillColor(sf::Color(0, 0, 0, 130));
+            ventana.draw(sombra);
+
+            sf::RectangleShape card(sf::Vector2f(rect.width, rect.height));
+            card.setPosition(rect.left, rect.top);
+            card.setFillColor(hover ? sf::Color(28, 58, 45, 245) : sf::Color(15, 28, 28, 225));
+            card.setOutlineColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
+            card.setOutlineThickness(hover ? 3.f : 2.f);
+            ventana.draw(card);
+
+            sf::CircleShape numero(12.f);
+            numero.setPosition(rect.left + 9.f, rect.top + 8.f);
+            numero.setFillColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
+            numero.setOutlineColor(sf::Color::Black);
+            numero.setOutlineThickness(2.f);
+            ventana.draw(numero);
+
+            ui.dibujarTexto(ventana, std::to_string(i + 1), rect.left + 16.f, rect.top + 10.f, 13, sf::Color::Black);
+            ui.dibujarTexto(ventana, nombresPersonajes[i], rect.left + 38.f, rect.top + 12.f, 11, sf::Color::White);
+        }
+    }
+
+    void dibujarItemsPortada() {
+        sf::RectangleShape panel(sf::Vector2f(292.f, 188.f));
+        panel.setPosition(474.f, 360.f);
+        panel.setFillColor(sf::Color(0, 0, 0, 155));
+        panel.setOutlineColor(sf::Color(110, 245, 150, 170));
+        panel.setOutlineThickness(2.f);
+        ventana.draw(panel);
+
+        ui.dibujarTexto(ventana, "ITEMS", 492.f, 374.f, 18, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "Taquetes: mas velocidad", 492.f, 404.f, 12, sf::Color::White);
+        ui.dibujarTexto(ventana, "Espinilleras: invencible", 492.f, 426.f, 12, sf::Color::White);
+        ui.dibujarTexto(ventana, "Guantes: invencible 10s", 492.f, 448.f, 12, sf::Color::White);
+        ui.dibujarTexto(ventana, "Banda: triple tiro + poder", 492.f, 470.f, 12, sf::Color::White);
+        ui.dibujarTexto(ventana, "Amarilla: te congela", 492.f, 492.f, 12, sf::Color(255, 235, 95));
+        ui.dibujarTexto(ventana, "Roja: pierdes la partida", 492.f, 514.f, 12, sf::Color(255, 100, 90));
+    }
+
+    void dibujarPantallaPersonajes() {
+        dibujarFondoMenu();
+
+        sf::RectangleShape panel(sf::Vector2f(700.f, 500.f));
+        panel.setPosition(50.f, 55.f);
+        panel.setFillColor(sf::Color(0, 0, 0, 175));
+        panel.setOutlineColor(sf::Color(245, 210, 65));
+        panel.setOutlineThickness(2.f);
+        ventana.draw(panel);
+
+        dibujarTextoSombra("VER PERSONAJES", 235.f, 80.f, 38, sf::Color::White);
+        ui.dibujarTexto(ventana, "Haz click en un futbolista para jugar con el.", 220.f, 125.f, 16, sf::Color(210, 240, 220));
+
+        for(int i = 0; i < 6; ++i) {
+            sf::FloatRect rect = rectPersonaje(i);
+            bool hover = personajeHover == i;
+
+            sf::RectangleShape card(sf::Vector2f(rect.width, rect.height));
+            card.setPosition(rect.left, rect.top);
+            card.setFillColor(hover ? sf::Color(24, 66, 52, 240) : sf::Color(12, 24, 24, 225));
+            card.setOutlineColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
+            card.setOutlineThickness(hover ? 3.f : 2.f);
+            ventana.draw(card);
+
+            sf::Sprite preview(tPersonajes[i]);
+            sf::FloatRect bounds = preview.getLocalBounds();
+            if (bounds.width > 0.f && bounds.height > 0.f) {
+                preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+                float escala = std::min(58.f / bounds.width, 66.f / bounds.height);
+                preview.setScale(escala, escala);
+                preview.setPosition(rect.left + 54.f, rect.top + 50.f);
+                ventana.draw(preview);
+            }
+
+            sf::CircleShape numero(13.f);
+            numero.setPosition(rect.left + 12.f, rect.top + 11.f);
+            numero.setFillColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
+            numero.setOutlineColor(sf::Color::Black);
+            numero.setOutlineThickness(2.f);
+            ventana.draw(numero);
+
+            ui.dibujarTexto(ventana, std::to_string(i + 1), rect.left + 19.f, rect.top + 13.f, 13, sf::Color::Black);
+            ui.dibujarTexto(ventana, nombresPersonajes[i], rect.left + 88.f, rect.top + 30.f, 13, sf::Color::White);
+            ui.dibujarTexto(ventana, hover ? "Jugar" : "Elegir", rect.left + 88.f, rect.top + 58.f, 12, hover ? sf::Color(245, 210, 65) : sf::Color(210, 240, 220));
+        }
+
+        ui.dibujarTexto(ventana, "ENTER / ESC para regresar", 285.f, 515.f, 18, sf::Color(245, 210, 65));
+    }
+
+    void dibujarPantallaInstrucciones() {
+        dibujarFondoMenu();
+
+        sf::RectangleShape panel(sf::Vector2f(700.f, 500.f));
+        panel.setPosition(50.f, 55.f);
+        panel.setFillColor(sf::Color(0, 0, 0, 175));
+        panel.setOutlineColor(sf::Color(110, 245, 150));
+        panel.setOutlineThickness(2.f);
+        ventana.draw(panel);
+
+        dibujarTextoSombra("INSTRUCCIONES", 245.f, 85.f, 38, sf::Color::White);
+
+        ui.dibujarTexto(ventana, "En el menu:", 115.f, 155.f, 20, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "1/P: ver personajes  |  2/E: ver enemigos  |  3/I: instrucciones", 115.f, 190.f, 16, sf::Color::White);
+        ui.dibujarTexto(ventana, "En personajes, haz click o presiona 1-6 para iniciar partido.", 115.f, 222.f, 16, sf::Color::White);
+
+        ui.dibujarTexto(ventana, "Durante el partido:", 115.f, 285.f, 20, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "Flechas: moverte  |  W/Arriba: saltar", 115.f, 320.f, 16, sf::Color::White);
+        ui.dibujarTexto(ventana, "Espacio: lanzar balon", 115.f, 352.f, 16, sf::Color::White);
+        ui.dibujarTexto(ventana, "Derrota a los 5 rivales y llega a 100 puntos.", 115.f, 384.f, 16, sf::Color(110, 245, 150));
+
+        ui.dibujarTexto(ventana, "ENTER / ESC para regresar", 285.f, 500.f, 18, sf::Color(245, 210, 65));
     }
 
     void dibujarLucesEstadio(float baseY) {
@@ -452,6 +615,7 @@ public:
         tiempoTransicionNivel = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
+        tiempoSpawnPowerUp = 0.f;
         ultimoJefeDerrotado = 0;
         poderActivo = PowerUpType::NINGUNO;
         personajeSeleccionadoIdx = 0;
@@ -474,6 +638,11 @@ public:
         // Cargar texturas de enemigos
         for(int i = 1; i <= 5; ++i) {
             tEnemigos[i-1] = Recursos::cargarTexturaEnemigo(i);
+        }
+
+        // Cargar texturas de personajes para la pantalla de seleccion
+        for(int i = 0; i < 6; ++i) {
+            tPersonajes[i] = Recursos::cargarTexturaPersonaje(i);
         }
 
         // Cargar texturas de escenarios
@@ -567,10 +736,12 @@ private:
                 if (estadoActual == GameState::MENU) {
                     int opcion = opcionMenuEn(mouse);
                     if (opcion >= 0) ejecutarOpcionMenu(opcion);
-                } else if (estadoActual == GameState::SELECCION) {
+                } else if (estadoActual == GameState::PERSONAJES) {
                     int idx = personajeEn(mouse);
-                    if (idx >= 0) iniciarPartidaConPersonaje(idx);
-                } else if (estadoActual == GameState::GALERIA || estadoActual == GameState::VICTORIA || estadoActual == GameState::GAMEOVER) {
+                    if (idx >= 0) {
+                        iniciarPartidaConPersonaje(idx);
+                    }
+                } else if (estadoActual == GameState::GALERIA || estadoActual == GameState::INSTRUCCIONES || estadoActual == GameState::VICTORIA || estadoActual == GameState::GAMEOVER) {
                     estadoActual = GameState::MENU;
                 } else if (estadoActual == GameState::PANTALLA_NIVEL) {
                     iniciarNivel(nivel);
@@ -579,7 +750,22 @@ private:
             }
 
             if (evento.type == sf::Event::KeyPressed) {
-                if (estadoActual == GameState::GALERIA || estadoActual == GameState::VICTORIA || estadoActual == GameState::GAMEOVER) {
+                if (estadoActual == GameState::MENU) {
+                    if (evento.key.code == sf::Keyboard::Num1) ejecutarOpcionMenu(0);
+                    if (evento.key.code == sf::Keyboard::Num2) ejecutarOpcionMenu(1);
+                    if (evento.key.code == sf::Keyboard::Num3) ejecutarOpcionMenu(2);
+                    if (evento.key.code == sf::Keyboard::Num4 || evento.key.code == sf::Keyboard::Escape) ejecutarOpcionMenu(3);
+                    if (evento.key.code == sf::Keyboard::P) ejecutarOpcionMenu(0);
+                    if (evento.key.code == sf::Keyboard::E) ejecutarOpcionMenu(1);
+                    if (evento.key.code == sf::Keyboard::I) ejecutarOpcionMenu(2);
+                }
+                else if (estadoActual == GameState::PERSONAJES) {
+                    if (evento.key.code >= sf::Keyboard::Num1 && evento.key.code <= sf::Keyboard::Num6) {
+                        iniciarPartidaConPersonaje(evento.key.code - sf::Keyboard::Num1);
+                    }
+                    if (evento.key.code == sf::Keyboard::Escape || evento.key.code == sf::Keyboard::Enter) estadoActual = GameState::MENU;
+                }
+                else if (estadoActual == GameState::GALERIA || estadoActual == GameState::INSTRUCCIONES || estadoActual == GameState::VICTORIA || estadoActual == GameState::GAMEOVER) {
                     if (evento.key.code == sf::Keyboard::Escape || evento.key.code == sf::Keyboard::Enter) estadoActual = GameState::MENU;
                 }
                 else if (estadoActual == GameState::PANTALLA_NIVEL) {
@@ -623,10 +809,10 @@ private:
             }
         }
 
-        int probabilidadPowerUp = 950 + (nivel * 120);
-        if (powerups.empty() && std::rand() % probabilidadPowerUp == 7) {
-            PowerUpType randomTipo = static_cast<PowerUpType>((std::rand() % 6) + 1);
-            powerups.push_back(PowerUp(std::rand() % 700 + 50, 0.f, randomTipo, texturaParaPowerUp(randomTipo)));
+        tiempoSpawnPowerUp += dt;
+        if (tiempoSpawnPowerUp >= 6.5f) {
+            tiempoSpawnPowerUp -= 6.5f;
+            generarPowerUp();
         }
 
         for (auto& b : balones) b.actualizar(dt);
@@ -731,68 +917,18 @@ private:
             ui.dibujarTexto(ventana, "COPA DE BARRIO", 82, 51, 18, sf::Color::White);
             ui.dibujarTexto(ventana, "Futbol Mexicano Multiverse", 432, 292, 18, sf::Color(110, 245, 150));
 
-            sf::RectangleShape menuBase(sf::Vector2f(340.f, 218.f));
-            menuBase.setPosition(415.f, 307.f);
-            menuBase.setFillColor(sf::Color(0, 0, 0, 62));
-            menuBase.setOutlineColor(sf::Color(255, 255, 255, 45));
-            menuBase.setOutlineThickness(1.f);
-            ventana.draw(menuBase);
-
-            sf::RectangleShape linea(sf::Vector2f(230.f, 5.f));
-            linea.setPosition(430.f, 315.f);
-            linea.setFillColor(sf::Color(50, 210, 110));
-            ventana.draw(linea);
-
-            dibujarBotonMenu(0, "JUGAR PARTIDO", 325, sf::Color(245, 210, 65));
-            dibujarBotonMenu(1, "GALERIA DE RIVALES", 383, sf::Color(80, 210, 255));
-            dibujarBotonMenu(2, "SALIR DEL ESTADIO", 441, sf::Color(255, 90, 80));
+            dibujarBotonMenu(0, "VER PERSONAJES", 245, sf::Color(60, 140, 230));
+            dibujarBotonMenu(1, "VER ENEMIGOS", 311, sf::Color(150, 75, 190));
+            dibujarBotonMenu(2, "INSTRUCCIONES DEL JUEGO", 377, sf::Color(50, 175, 35));
+            dibujarBotonMenu(3, "SALIR", 443, sf::Color(210, 55, 35));
 
             dibujarResumenPortada();
         } 
-        else if (estadoActual == GameState::SELECCION) {
-            dibujarFondoMenu();
-            sf::RectangleShape panel(sf::Vector2f(690.f, 500.f));
-            panel.setPosition(55.f, 55.f);
-            panel.setFillColor(sf::Color(0, 0, 0, 160));
-            panel.setOutlineColor(sf::Color(245, 210, 65));
-            panel.setOutlineThickness(2.f);
-            ventana.draw(panel);
-
-            dibujarTextoSombra("SELECCIONA TU FUTBOLISTA", 115, 82, 34, sf::Color::White);
-            ui.dibujarTexto(ventana, "La eleccion cambia la apariencia, la habilidad depende de ti.", 120, 130, 16, sf::Color(210, 240, 220));
-
-            for(int i = 0; i < 6; ++i) {
-                sf::FloatRect rect = rectPersonaje(i);
-                bool hover = personajeHover == i;
-
-                sf::RectangleShape sombra(sf::Vector2f(rect.width, rect.height));
-                sombra.setPosition(rect.left + 5.f, rect.top + 6.f);
-                sombra.setFillColor(sf::Color(0, 0, 0, 140));
-                ventana.draw(sombra);
-
-                sf::RectangleShape card(sf::Vector2f(rect.width, rect.height));
-                card.setPosition(rect.left, rect.top);
-                card.setFillColor(hover ? sf::Color(28, 58, 45, 245) : sf::Color(15, 28, 28, 225));
-                card.setOutlineColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
-                card.setOutlineThickness(hover ? 3.f : 2.f);
-                ventana.draw(card);
-
-                sf::CircleShape emblema(18.f);
-                emblema.setPosition(rect.left + 14.f, rect.top + 11.f);
-                emblema.setFillColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
-                emblema.setOutlineColor(sf::Color::Black);
-                emblema.setOutlineThickness(2.f);
-                ventana.draw(emblema);
-
-                ui.dibujarTexto(ventana, "FC", rect.left + 20.f, rect.top + 18.f, 13, sf::Color::Black);
-                ui.dibujarTexto(ventana, nombresPersonajes[i], rect.left + 68.f, rect.top + 18.f, 18, sf::Color::White);
-
-                if (hover) {
-                    ui.dibujarTexto(ventana, "Elegir", rect.left + 205.f, rect.top + 20.f, 14, sf::Color(245, 210, 65));
-                }
-            }
-
-            ui.dibujarTexto(ventana, "Elige tu futbolista con el cursor.", 245, 500, 16, sf::Color(245, 210, 65));
+        else if (estadoActual == GameState::PERSONAJES) {
+            dibujarPantallaPersonajes();
+        }
+        else if (estadoActual == GameState::INSTRUCCIONES) {
+            dibujarPantallaInstrucciones();
         }
         else if (estadoActual == GameState::GALERIA) {
             dibujarFondoMenu();
