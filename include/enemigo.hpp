@@ -20,21 +20,12 @@ public:
     Enemigo(std::string nom, int nvl, const sf::Texture& tex) {
         nombre = nom;
         nivel = nvl;
-<<<<<<< HEAD
-        vida = 18 + (nvl * 4);
-        velocidad = 155.f + (nvl * 55.f); 
-        x = 400.f; y = 100.f;
-        direccion = 1;
-        tempAtaque = 0.f;
-        intervaloAtaque = calcularIntervaloAtaque();
-=======
         vida = 18 + (nvl * 5);
         velocidad = 185.f + (nvl * 58.f); 
         x = 400.f; y = 100.f;
         direccion = 1;
         tempAtaque = 0.f;
-        intervaloAtaque = 1.18f - (nvl * 0.08f);
->>>>>>> 1f6c12c57676b76b67eb7ae363f2239773288897
+        intervaloAtaque = calcularIntervaloAtaque();
         
         textura = tex;
         sf::Vector2u size = textura.getSize();
@@ -54,16 +45,16 @@ public:
     }
 
     float calcularIntervaloAtaque() const {
-        float intervalo = 1.45f - ((nivel - 1) * 0.20f);
-        return intervalo < 0.65f ? 0.65f : intervalo;
+        float intervalo = 1.18f - (nivel * 0.08f);
+        return intervalo < 0.58f ? 0.58f : intervalo;
     }
 
     float calcularVelocidadProyectil() const {
-        return 360.f + (nivel * 95.f);
+        return 350.f + (nivel * 92.f);
     }
 
     int maxAtaquesActivos() const {
-        return 1 + (nivel / 3);
+        return 1 + (nivel / 2);
     }
 
     void actualizar(float dt) {
@@ -77,27 +68,17 @@ public:
         sprite.setScale(escala, escala);
     }
 
-<<<<<<< HEAD
-    void atacar(float dt, std::vector<AtaqueEnemigo>& ataques, const sf::Texture& texProyectil) {
-        if (ataques.size() >= static_cast<size_t>(maxAtaquesActivos())) return;
-=======
     void atacar(float dt, std::vector<AtaqueEnemigo>& ataques, const sf::Texture& texProyectil, float jugadorX) {
-        int maxAtaques = 1 + (nivel / 2);
-        if (static_cast<int>(ataques.size()) >= maxAtaques) return;
->>>>>>> 1f6c12c57676b76b67eb7ae363f2239773288897
+        if (static_cast<int>(ataques.size()) >= maxAtaquesActivos()) return;
 
         tempAtaque += dt;
         if (tempAtaque >= intervaloAtaque) {
             tempAtaque = 0.f;
-<<<<<<< HEAD
-            ataques.push_back(AtaqueEnemigo(x, sprite.getPosition().y + 30.f, calcularVelocidadProyectil(), texProyectil));
-=======
             float direccionJugador = jugadorX - x;
             float vx = direccionJugador * (0.34f + nivel * 0.035f);
             if (vx > 190.f) vx = 190.f;
             if (vx < -190.f) vx = -190.f;
-            ataques.push_back(AtaqueEnemigo(x, sprite.getPosition().y + 30.f, 350.f + (nivel * 92.f), texProyectil, PowerUpType::NINGUNO, vx));
->>>>>>> 1f6c12c57676b76b67eb7ae363f2239773288897
+            ataques.push_back(AtaqueEnemigo(x, sprite.getPosition().y + 30.f, calcularVelocidadProyectil(), texProyectil, PowerUpType::NINGUNO, vx));
         }
     }
 };
