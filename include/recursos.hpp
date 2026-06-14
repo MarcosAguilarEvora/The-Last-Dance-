@@ -318,7 +318,7 @@ public:
     // Sound Buffers (efectos)
     static sf::SoundBuffer cargarSonidoLanzamiento() {
         sf::SoundBuffer buf;
-        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/Lanzamiento.ogg"));
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/lanzar_balon.wav"));
         return buf;
     }
 

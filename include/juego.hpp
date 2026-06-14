@@ -16,7 +16,7 @@ enum class GameState { MENU, PERSONAJES, GALERIA, INSTRUCCIONES, JUGANDO, PANTAL
 
 class Juego {
 private:
-    static const bool AUDIO_ACTIVO = false;
+    static const bool AUDIO_ACTIVO = true;
     sf::RenderWindow ventana;
     GameState estadoActual;
     Personaje jugador;
@@ -80,6 +80,7 @@ private:
         tiempoDisparoJugador = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
+        reproducirSonido(sonidoSilbato);
     }
 
     sf::Texture& texturaParaPowerUp(PowerUpType tipo) {
@@ -106,10 +107,7 @@ private:
         float x = static_cast<float>(std::rand() % 680 + 60);
         float y = posicionesY[std::rand() % 4];
 
-        if (powerups.size() >= 4) {
-            powerups.erase(powerups.begin());
-        }
-
+        powerups.clear();
         powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo)));
     }
 
@@ -211,6 +209,9 @@ private:
     }
 
     int columnasPersonaje(int idx) {
+        if (idx == 2) return 3;
+        if (idx == 3) return 3;
+        if (idx == 5) return 8;
         return idx == 4 ? 5 : 4;
     }
 
@@ -502,9 +503,16 @@ private:
             sf::FloatRect bounds = preview.getLocalBounds();
             if (bounds.width > 0.f && bounds.height > 0.f) {
                 preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-                float escala = std::min(74.f / bounds.width, 86.f / bounds.height);
+                float escala = std::min(88.f / bounds.width, 98.f / bounds.height);
                 preview.setScale(escala, escala);
                 preview.setPosition(rect.left + 58.f, rect.top + 58.f);
+
+                sf::CircleShape resplandor(38.f);
+                resplandor.setOrigin(38.f, 38.f);
+                resplandor.setScale(1.05f, 0.95f);
+                resplandor.setPosition(rect.left + 58.f, rect.top + 58.f);
+                resplandor.setFillColor(sf::Color(170, 235, 205, 32));
+                ventana.draw(resplandor);
 
                 sf::CircleShape sombra(29.f);
                 sombra.setOrigin(29.f, 9.f);
@@ -796,7 +804,7 @@ public:
             sonidoEnemigoDerrota = crearSonido(bufEnemigoDerrota, 50.f);
             sonidoDerrota = crearSonido(bufDerrota, 50.f);
             sonidoVictoria = crearSonido(bufVictoria, 50.f);
-            sonidoHover = crearSonido(bufSilbato, 15.f);
+            sonidoHover = crearSonido(bufLanzamiento, 12.f);
 
             float tonosJugador[6] = {0.82f, 0.94f, 1.06f, 1.18f, 1.30f, 1.44f};
             float tonosGolpeJugador[6] = {0.72f, 0.84f, 0.96f, 1.08f, 1.20f, 1.32f};
@@ -807,7 +815,7 @@ public:
 
             float tonosMuerte[5] = {0.82f, 0.95f, 1.08f, 1.22f, 1.38f};
             for (int i = 0; i < 5; ++i) {
-                sonidosGolpeJefe[i] = crearSonido(bufSilbato, 34.f, tonosMuerte[i] + 0.18f);
+                sonidosGolpeJefe[i] = crearSonido(bufLanzamiento, 28.f, tonosMuerte[i] + 0.18f);
                 sonidosMuerteJefe[i] = crearSonido(bufEnemigoDerrota, 55.f, tonosMuerte[i]);
         }
 
@@ -955,10 +963,12 @@ private:
             }
         }
 
-        tiempoSpawnPowerUp += dt;
-        if (tiempoSpawnPowerUp >= 8.5f) {
-            tiempoSpawnPowerUp -= 8.5f;
-            generarPowerUp();
+        if (poderActivo == PowerUpType::NINGUNO && powerups.empty()) {
+            tiempoSpawnPowerUp += dt;
+            if (tiempoSpawnPowerUp >= 8.5f) {
+                tiempoSpawnPowerUp = 0.f;
+                generarPowerUp();
+            }
         }
 
         for (auto& b : balones) b.actualizar(dt);
@@ -1019,8 +1029,12 @@ private:
         }
 
         for (auto it = powerups.begin(); it != powerups.end();) {
-            if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
+            if (it->expiro()) {
+                it = powerups.erase(it);
+                tiempoSpawnPowerUp = 0.f;
+            } else if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
                 poderActivo = it->tipo;
+                tiempoSpawnPowerUp = 0.f;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
                     estadoActual = GameState::GAMEOVER;
                     reproducirSonido(sonidoDerrota);
@@ -1037,6 +1051,7 @@ private:
                 it = powerups.erase(it);
             } else if (it->sprite.getPosition().y > 620.f) {
                 it = powerups.erase(it);
+                tiempoSpawnPowerUp = 0.f;
             } else {
                 ++it;
             }

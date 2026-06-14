@@ -45,8 +45,9 @@ public:
     sf::Sprite sprite;
     PowerUpType tipo;
     float velocidadY;
+    float tiempoVida;
 
-    PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex, float velY = 0.f) : tipo(t), velocidadY(velY) {
+    PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex, float velY = 0.f) : tipo(t), velocidadY(velY), tiempoVida(5.f) {
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
@@ -54,6 +55,11 @@ public:
     }
 
     void actualizar(float dt) {
+        tiempoVida -= dt;
         sprite.move(0.f, velocidadY * dt);
+    }
+
+    bool expiro() const {
+        return tiempoVida <= 0.f;
     }
 };
