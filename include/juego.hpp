@@ -42,7 +42,7 @@ private:
     sf::Sound* sonidosGolpeJugador[6];
     sf::Sound* sonidosGolpeJefe[5];
     sf::Sound* sonidosMuerteJefe[5];
-    sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufVictoria;
+    sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufGolpeJugador, bufRondaPerdida, bufVictoria;
 
     // Sprites de escenarios
     sf::Sprite escenarioActual;
@@ -797,20 +797,22 @@ public:
         bufSilbato = Recursos::cargarSonidoSilbato();
         bufEnemigoDerrota = Recursos::cargarSonidoEnemigoDerrota();
         bufDerrota = Recursos::cargarSonidoDerrota();
+        bufGolpeJugador = Recursos::cargarSonidoGolpeJugador();
+        bufRondaPerdida = Recursos::cargarSonidoRondaPerdida();
         bufVictoria = Recursos::cargarSonidoVictoria();
 
             sonidoLanzamiento = crearSonido(bufLanzamiento, 30.f);
             sonidoSilbato = crearSonido(bufSilbato, 30.f);
             sonidoEnemigoDerrota = crearSonido(bufEnemigoDerrota, 50.f);
-            sonidoDerrota = crearSonido(bufDerrota, 50.f);
+            sonidoDerrota = crearSonido(bufRondaPerdida, 58.f);
             sonidoVictoria = crearSonido(bufVictoria, 50.f);
             sonidoHover = crearSonido(bufLanzamiento, 12.f);
 
             float tonosJugador[6] = {0.82f, 0.94f, 1.06f, 1.18f, 1.30f, 1.44f};
-            float tonosGolpeJugador[6] = {0.72f, 0.84f, 0.96f, 1.08f, 1.20f, 1.32f};
+            float tonosGolpeJugador[6] = {0.88f, 0.95f, 1.02f, 1.09f, 1.16f, 1.23f};
             for (int i = 0; i < 6; ++i) {
                 sonidosJugador[i] = crearSonido(bufLanzamiento, 32.f, tonosJugador[i]);
-                sonidosGolpeJugador[i] = crearSonido(bufDerrota, 45.f, tonosGolpeJugador[i]);
+                sonidosGolpeJugador[i] = crearSonido(bufGolpeJugador, 54.f, tonosGolpeJugador[i]);
             }
 
             float tonosMuerte[5] = {0.82f, 0.95f, 1.08f, 1.22f, 1.38f};

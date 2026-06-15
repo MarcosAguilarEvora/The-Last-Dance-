@@ -340,6 +340,18 @@ public:
         return buf;
     }
 
+    static sf::SoundBuffer cargarSonidoGolpeJugador() {
+        sf::SoundBuffer buf;
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/jugador_golpeado.wav"));
+        return buf;
+    }
+
+    static sf::SoundBuffer cargarSonidoRondaPerdida() {
+        sf::SoundBuffer buf;
+        buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/ronda_perdida.wav"));
+        return buf;
+    }
+
     static sf::SoundBuffer cargarSonidoVictoria() {
         sf::SoundBuffer buf;
         buf.loadFromFile(rutaArchivo("assets/music/Sonidosjuego/Juegoganado.ogg"));
