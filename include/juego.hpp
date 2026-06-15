@@ -1144,8 +1144,7 @@ private:
                 if (size.x > 0 && size.y > 0) {
                     int frameW = static_cast<int>(size.x / 3);
                     int frameH = static_cast<int>(size.y / 2);
-                    int frame = static_cast<int>(tiempoAnimacion * 5.f + i) % 3;
-                    rival.setTextureRect(sf::IntRect(frame * frameW, 0, frameW, frameH));
+                    rival.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
                     rival.setOrigin(frameW / 2.f, frameH * 0.85f);
                     float escala = std::min(44.f / frameW, 54.f / frameH);
                     rival.setScale(escala, escala);
