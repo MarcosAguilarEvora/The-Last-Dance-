@@ -82,3 +82,15 @@ Juego cerrado normalmente
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
+<<<<<<< HEAD
+=======
+Iniciando juego
+Juego creado
+Juego cerrado normalmente
+Iniciando juego
+Juego creado
+Juego cerrado normalmente
+Iniciando juego
+Juego creado
+Juego cerrado normalmente
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06

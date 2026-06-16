@@ -43,7 +43,7 @@ private:
     sf::Sound* sonidosGolpeJugador[6];
     sf::Sound* sonidosGolpeJefe[5];
     sf::Sound* sonidosMuerteJefe[5];
-    sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufVictoria;
+    sf::SoundBuffer bufLanzamiento, bufSilbato, bufEnemigoDerrota, bufDerrota, bufGolpeJugador, bufRondaPerdida, bufVictoria;
 
     // Sprites de escenarios
     sf::Sprite escenarioActual;
@@ -137,7 +137,11 @@ private:
         float duracionVisible = esTarjeta(randomTipo) ? 5.f : (randomTipo == PowerUpType::VIDA_EXTRA ? 8.f : 7.f);
 
         powerups.clear();
+<<<<<<< HEAD
         powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo), 0.f, duracionVisible));
+=======
+        powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo)));
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     void dibujarFondoMenu() {
@@ -245,9 +249,16 @@ private:
     }
 
     int columnasPersonaje(int idx) {
+<<<<<<< HEAD
         if (idx == 3) return 3;
         if (idx == 5) return 8;
         return 4;
+=======
+        if (idx == 2) return 3;
+        if (idx == 3) return 3;
+        if (idx == 5) return 8;
+        return idx == 4 ? 5 : 4;
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     sf::Sound* crearSonido(sf::SoundBuffer& buffer, float volumen, float tono = 1.f) {
@@ -546,10 +557,21 @@ private:
             sf::FloatRect bounds = preview.getLocalBounds();
             if (bounds.width > 0.f && bounds.height > 0.f) {
                 preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+<<<<<<< HEAD
                 float escala = std::min(118.f / bounds.width, 142.f / bounds.height);
                 if (hover) escala *= 1.08f;
+=======
+                float escala = std::min(88.f / bounds.width, 98.f / bounds.height);
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 preview.setScale(escala, escala);
                 preview.setPosition(rect.left + rect.width * 0.5f, rect.top + 82.f);
+
+                sf::CircleShape resplandor(38.f);
+                resplandor.setOrigin(38.f, 38.f);
+                resplandor.setScale(1.05f, 0.95f);
+                resplandor.setPosition(rect.left + 58.f, rect.top + 58.f);
+                resplandor.setFillColor(sf::Color(170, 235, 205, 32));
+                ventana.draw(resplandor);
 
                 sf::CircleShape sombra(29.f);
                 sombra.setOrigin(29.f, 9.f);
@@ -1129,20 +1151,22 @@ public:
         bufSilbato = Recursos::cargarSonidoSilbato();
         bufEnemigoDerrota = Recursos::cargarSonidoEnemigoDerrota();
         bufDerrota = Recursos::cargarSonidoDerrota();
+        bufGolpeJugador = Recursos::cargarSonidoGolpeJugador();
+        bufRondaPerdida = Recursos::cargarSonidoRondaPerdida();
         bufVictoria = Recursos::cargarSonidoVictoria();
 
             sonidoLanzamiento = crearSonido(bufLanzamiento, 30.f);
             sonidoSilbato = crearSonido(bufSilbato, 30.f);
             sonidoEnemigoDerrota = crearSonido(bufEnemigoDerrota, 50.f);
-            sonidoDerrota = crearSonido(bufDerrota, 50.f);
+            sonidoDerrota = crearSonido(bufRondaPerdida, 58.f);
             sonidoVictoria = crearSonido(bufVictoria, 50.f);
             sonidoHover = crearSonido(bufLanzamiento, 12.f);
 
             float tonosJugador[6] = {0.82f, 0.94f, 1.06f, 1.18f, 1.30f, 1.44f};
-            float tonosGolpeJugador[6] = {0.72f, 0.84f, 0.96f, 1.08f, 1.20f, 1.32f};
+            float tonosGolpeJugador[6] = {0.88f, 0.95f, 1.02f, 1.09f, 1.16f, 1.23f};
             for (int i = 0; i < 6; ++i) {
                 sonidosJugador[i] = crearSonido(bufLanzamiento, 32.f, tonosJugador[i]);
-                sonidosGolpeJugador[i] = crearSonido(bufDerrota, 45.f, tonosGolpeJugador[i]);
+                sonidosGolpeJugador[i] = crearSonido(bufGolpeJugador, 54.f, tonosGolpeJugador[i]);
             }
 
             float tonosMuerte[5] = {0.82f, 0.95f, 1.08f, 1.22f, 1.38f};
@@ -1365,6 +1389,7 @@ private:
                 it = powerups.erase(it);
                 tiempoSpawnPowerUp = 0.f;
             } else if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
+<<<<<<< HEAD
                 if (it->tipo == PowerUpType::VIDA_EXTRA) {
                     if (jugador.vidas < 3) {
                         jugador.vidas++;
@@ -1375,6 +1400,8 @@ private:
                     continue;
                 }
 
+=======
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 poderActivo = it->tipo;
                 tiempoSpawnPowerUp = 0.f;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
@@ -1482,8 +1509,7 @@ private:
                 if (size.x > 0 && size.y > 0) {
                     int frameW = static_cast<int>(size.x / 3);
                     int frameH = static_cast<int>(size.y / 2);
-                    int frame = static_cast<int>(tiempoAnimacion * 5.f + i) % 3;
-                    rival.setTextureRect(sf::IntRect(frame * frameW, 0, frameW, frameH));
+                    rival.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
                     rival.setOrigin(frameW / 2.f, frameH * 0.85f);
                     float escala = std::min(44.f / frameW, 54.f / frameH);
                     rival.setScale(escala, escala);
