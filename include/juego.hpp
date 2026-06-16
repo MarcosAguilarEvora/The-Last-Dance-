@@ -27,11 +27,12 @@ private:
     std::vector<AtaqueEnemigo> ataques;
     std::vector<PowerUp> powerups;
 
-    sf::Texture tBalon, tSilbato, tDinero, tFlecha, tTaquetes, tEspinilleras, tGuantes, tBanda, tAmarilla, tRoja;
+    sf::Texture tBalon, tSilbato, tDinero, tFlecha, tTaquetes, tEspinilleras, tGuantes, tBanda, tAmarilla, tRoja, tCorazon;
     sf::Texture tEnemigos[5];
     sf::Texture tPersonajes[6];
     sf::Texture tEscenarios[5];
     sf::Texture tMenuFondo;
+    sf::Texture tInstruccionesFondo;
 
     // Audio
     sf::Music* musicaFondo;
@@ -91,6 +92,7 @@ private:
             case PowerUpType::BANDA_CAPITAN: return tBanda;
             case PowerUpType::TARJETA_AMARILLA: return tAmarilla;
             case PowerUpType::TARJETA_ROJA: return tRoja;
+            case PowerUpType::VIDA_EXTRA: return tCorazon;
             default: return tTaquetes;
         }
     }
@@ -101,14 +103,45 @@ private:
         return tSilbato;
     }
 
+    bool esTarjeta(PowerUpType tipo) const {
+        return tipo == PowerUpType::TARJETA_AMARILLA || tipo == PowerUpType::TARJETA_ROJA;
+    }
+
+    sf::Color colorPowerUp(PowerUpType tipo) const {
+        switch (tipo) {
+            case PowerUpType::TAQUETES: return sf::Color(235, 55, 55);
+            case PowerUpType::ESPINILLERAS: return sf::Color(75, 190, 255);
+            case PowerUpType::GUANTES: return sf::Color(150, 95, 230);
+            case PowerUpType::BANDA_CAPITAN: return sf::Color(245, 210, 65);
+            case PowerUpType::TARJETA_AMARILLA: return sf::Color(255, 230, 55);
+            case PowerUpType::TARJETA_ROJA: return sf::Color(255, 65, 55);
+            case PowerUpType::VIDA_EXTRA: return sf::Color(255, 80, 130);
+            default: return sf::Color::White;
+        }
+    }
+
     void generarPowerUp() {
-        PowerUpType randomTipo = static_cast<PowerUpType>((std::rand() % 6) + 1);
+        PowerUpType tiposNormales[6] = {
+            PowerUpType::TAQUETES,
+            PowerUpType::ESPINILLERAS,
+            PowerUpType::GUANTES,
+            PowerUpType::BANDA_CAPITAN,
+            PowerUpType::TARJETA_AMARILLA,
+            PowerUpType::TARJETA_ROJA
+        };
+        bool generarCorazon = (std::rand() % 4) == 0;
+        PowerUpType randomTipo = generarCorazon ? PowerUpType::VIDA_EXTRA : tiposNormales[std::rand() % 6];
         float posicionesY[4] = {520.f, 455.f, 405.f, 365.f};
         float x = static_cast<float>(std::rand() % 680 + 60);
         float y = posicionesY[std::rand() % 4];
+        float duracionVisible = esTarjeta(randomTipo) ? 5.f : (randomTipo == PowerUpType::VIDA_EXTRA ? 8.f : 7.f);
 
         powerups.clear();
+<<<<<<< HEAD
+        powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo), 0.f, duracionVisible));
+=======
         powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo)));
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     void dibujarFondoMenu() {
@@ -185,16 +218,23 @@ private:
     }
 
     sf::FloatRect rectBotonMenu(int opcion) {
-        return sf::FloatRect(500.f, 226.f + opcion * 68.f, 265.f, 56.f);
+        switch (opcion) {
+            case 0: return sf::FloatRect(292.f, 268.f, 230.f, 116.f);
+            case 1: return sf::FloatRect(25.f, 285.f, 170.f, 72.f);
+            case 2: return sf::FloatRect(25.f, 363.f, 170.f, 68.f);
+            case 3: return sf::FloatRect(25.f, 436.f, 170.f, 72.f);
+            default: return sf::FloatRect();
+        }
     }
 
     sf::FloatRect rectPersonaje(int idx) {
         int col = idx % 3;
         int row = idx / 3;
-        return sf::FloatRect(75.f + col * 225.f, 170.f + row * 145.f, 190.f, 112.f);
+        return sf::FloatRect(75.f + col * 225.f, 160.f + row * 185.f, 190.f, 170.f);
     }
 
     int opcionMenuEn(sf::Vector2f punto) {
+        if (sf::FloatRect(25.f, 208.f, 170.f, 72.f).contains(punto)) return 0;
         for (int i = 0; i < 4; ++i) {
             if (rectBotonMenu(i).contains(punto)) return i;
         }
@@ -209,10 +249,16 @@ private:
     }
 
     int columnasPersonaje(int idx) {
+<<<<<<< HEAD
+        if (idx == 3) return 3;
+        if (idx == 5) return 8;
+        return 4;
+=======
         if (idx == 2) return 3;
         if (idx == 3) return 3;
         if (idx == 5) return 8;
         return idx == 4 ? 5 : 4;
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     sf::Sound* crearSonido(sf::SoundBuffer& buffer, float volumen, float tono = 1.f) {
@@ -475,37 +521,50 @@ private:
 
         sf::RectangleShape panel(sf::Vector2f(700.f, 500.f));
         panel.setPosition(50.f, 55.f);
-        panel.setFillColor(sf::Color(0, 0, 0, 175));
+        panel.setFillColor(sf::Color(0, 0, 0, 150));
         panel.setOutlineColor(sf::Color(245, 210, 65));
         panel.setOutlineThickness(2.f);
         ventana.draw(panel);
 
         dibujarTextoSombra("ELIGE TU PERSONAJE", 185.f, 80.f, 38, sf::Color::White);
-        ui.dibujarTexto(ventana, "Haz click en un futbolista para iniciar el partido.", 195.f, 125.f, 16, sf::Color(210, 240, 220));
 
         for(int i = 0; i < 6; ++i) {
             sf::FloatRect rect = rectPersonaje(i);
             bool hover = personajeHover == i;
 
-            sf::RectangleShape card(sf::Vector2f(rect.width, rect.height));
-            card.setPosition(rect.left, rect.top);
-            card.setFillColor(hover ? sf::Color(24, 66, 52, 240) : sf::Color(12, 24, 24, 225));
-            card.setOutlineColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
-            card.setOutlineThickness(hover ? 3.f : 2.f);
-            ventana.draw(card);
+            sf::CircleShape foco(54.f);
+            foco.setOrigin(54.f, 54.f);
+            foco.setScale(1.2f, 0.58f);
+            foco.setPosition(rect.left + rect.width * 0.5f, rect.top + 86.f);
+            foco.setFillColor(hover ? sf::Color(245, 210, 65, 72) : sf::Color(80, 210, 255, 32));
+            ventana.draw(foco);
+
+            if (hover) {
+                sf::CircleShape seleccionado(7.f);
+                seleccionado.setOrigin(7.f, 7.f);
+                seleccionado.setPosition(rect.left + rect.width * 0.5f, rect.top + 8.f + std::sin(tiempoAnimacion * 8.f) * 3.f);
+                seleccionado.setFillColor(sf::Color(245, 210, 65));
+                ventana.draw(seleccionado);
+            }
 
             sf::Sprite preview(tPersonajes[i]);
             int columnas = columnasPersonaje(i);
             if (columnas > 0) {
-                int frame = static_cast<int>(tiempoAnimacion * 6.f + i) % columnas;
-                preview.setTextureRect(sf::IntRect(frame * (static_cast<int>(tPersonajes[i].getSize().x) / columnas), 0, static_cast<int>(tPersonajes[i].getSize().x) / columnas, static_cast<int>(tPersonajes[i].getSize().y)));
+                int frameW = static_cast<int>(tPersonajes[i].getSize().x) / columnas;
+                int frameH = static_cast<int>(tPersonajes[i].getSize().y);
+                preview.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
             }
             sf::FloatRect bounds = preview.getLocalBounds();
             if (bounds.width > 0.f && bounds.height > 0.f) {
                 preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+<<<<<<< HEAD
+                float escala = std::min(118.f / bounds.width, 142.f / bounds.height);
+                if (hover) escala *= 1.08f;
+=======
                 float escala = std::min(88.f / bounds.width, 98.f / bounds.height);
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 preview.setScale(escala, escala);
-                preview.setPosition(rect.left + 58.f, rect.top + 58.f);
+                preview.setPosition(rect.left + rect.width * 0.5f, rect.top + 82.f);
 
                 sf::CircleShape resplandor(38.f);
                 resplandor.setOrigin(38.f, 38.f);
@@ -516,51 +575,55 @@ private:
 
                 sf::CircleShape sombra(29.f);
                 sombra.setOrigin(29.f, 9.f);
-                sombra.setScale(1.4f, 0.27f);
-                sombra.setPosition(rect.left + 58.f, rect.top + 96.f);
-                sombra.setFillColor(sf::Color(0, 0, 0, 120));
+                sombra.setScale(1.75f, 0.28f);
+                sombra.setPosition(rect.left + rect.width * 0.5f, rect.top + 132.f);
+                sombra.setFillColor(sf::Color(0, 0, 0, 135));
                 ventana.draw(sombra);
 
                 ventana.draw(preview);
             }
 
-            sf::CircleShape numero(13.f);
-            numero.setPosition(rect.left + 12.f, rect.top + 11.f);
-            numero.setFillColor(hover ? sf::Color(245, 210, 65) : sf::Color(60, 200, 115));
-            numero.setOutlineColor(sf::Color::Black);
-            numero.setOutlineThickness(2.f);
-            ventana.draw(numero);
+            sf::RectangleShape nombre(sf::Vector2f(170.f, 30.f));
+            nombre.setOrigin(85.f, 0.f);
+            nombre.setPosition(rect.left + rect.width * 0.5f, rect.top + 143.f);
+            nombre.setFillColor(hover ? sf::Color(245, 210, 65, 230) : sf::Color(4, 18, 42, 210));
+            nombre.setOutlineColor(hover ? sf::Color::White : sf::Color(80, 210, 255, 120));
+            nombre.setOutlineThickness(2.f);
+            ventana.draw(nombre);
 
-            ui.dibujarTexto(ventana, std::to_string(i + 1), rect.left + 19.f, rect.top + 13.f, 13, sf::Color::Black);
-            ui.dibujarTexto(ventana, nombresPersonajes[i], rect.left + 92.f, rect.top + 28.f, 13, sf::Color::White);
-            ui.dibujarTexto(ventana, hover ? "Jugar ahora" : "Elegir", rect.left + 92.f, rect.top + 58.f, 12, hover ? sf::Color(245, 210, 65) : sf::Color(210, 240, 220));
+            ui.dibujarTexto(ventana, nombresPersonajes[i], rect.left + 28.f, rect.top + 148.f, 13, hover ? sf::Color::Black : sf::Color::White);
         }
 
-        ui.dibujarTexto(ventana, "ENTER / ESC para regresar", 285.f, 515.f, 18, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "ENTER / ESC para regresar", 285.f, 522.f, 18, sf::Color(245, 210, 65));
     }
 
     void dibujarPantallaInstrucciones() {
-        dibujarFondoMenu();
+        ventana.clear(sf::Color(4, 10, 24));
 
-        sf::RectangleShape panel(sf::Vector2f(700.f, 500.f));
-        panel.setPosition(50.f, 55.f);
-        panel.setFillColor(sf::Color(0, 0, 0, 175));
-        panel.setOutlineColor(sf::Color(110, 245, 150));
-        panel.setOutlineThickness(2.f);
-        ventana.draw(panel);
+        if (tInstruccionesFondo.getSize().x > 0 && tInstruccionesFondo.getSize().y > 0) {
+            sf::Sprite instrucciones(tInstruccionesFondo);
+            float escala = std::min(
+                800.f / instrucciones.getLocalBounds().width,
+                600.f / instrucciones.getLocalBounds().height
+            );
+            instrucciones.setScale(escala, escala);
+            instrucciones.setPosition(
+                (800.f - instrucciones.getLocalBounds().width * escala) * 0.5f,
+                (600.f - instrucciones.getLocalBounds().height * escala) * 0.5f
+            );
+            ventana.draw(instrucciones);
+        } else {
+            dibujarFondoMenu();
+            dibujarTextoSombra("INSTRUCCIONES", 245.f, 85.f, 38, sf::Color::White);
+        }
 
-        dibujarTextoSombra("INSTRUCCIONES", 245.f, 85.f, 38, sf::Color::White);
-
-        ui.dibujarTexto(ventana, "En el menu:", 115.f, 155.f, 20, sf::Color(245, 210, 65));
-        ui.dibujarTexto(ventana, "1/P: ver personajes  |  2/E: ver enemigos  |  3/I: instrucciones", 115.f, 190.f, 16, sf::Color::White);
-        ui.dibujarTexto(ventana, "En personajes, haz click o presiona 1-6 para iniciar partido.", 115.f, 222.f, 16, sf::Color::White);
-
-        ui.dibujarTexto(ventana, "Durante el partido:", 115.f, 285.f, 20, sf::Color(245, 210, 65));
-        ui.dibujarTexto(ventana, "Flechas: moverte  |  W/Arriba: saltar", 115.f, 320.f, 16, sf::Color::White);
-        ui.dibujarTexto(ventana, "Espacio: lanzar balon", 115.f, 352.f, 16, sf::Color::White);
-        ui.dibujarTexto(ventana, "Derrota a los 5 rivales y llega a 100 puntos.", 115.f, 384.f, 16, sf::Color(110, 245, 150));
-
-        ui.dibujarTexto(ventana, "ENTER / ESC para regresar", 285.f, 500.f, 18, sf::Color(245, 210, 65));
+        sf::RectangleShape regresar(sf::Vector2f(360.f, 34.f));
+        regresar.setPosition(220.f, 557.f);
+        regresar.setFillColor(sf::Color(4, 18, 42, 210));
+        regresar.setOutlineColor(sf::Color(245, 210, 65));
+        regresar.setOutlineThickness(2.f);
+        ventana.draw(regresar);
+        ui.dibujarTexto(ventana, "ENTER / ESC / CLICK para regresar", 245.f, 564.f, 15, sf::Color(245, 210, 65));
     }
 
     void dibujarLucesEstadio(float baseY) {
@@ -699,6 +762,294 @@ private:
         ventana.draw(impacto);
     }
 
+    void dibujarPowerUpConFeedback(const PowerUp& powerup) {
+        sf::Sprite item = powerup.sprite;
+        float ratio = powerup.vidaNormalizada();
+        float pulso = (std::sin(tiempoAnimacion * 8.f) + 1.f) * 0.5f;
+        sf::Color color = colorPowerUp(powerup.tipo);
+        sf::Vector2f pos = item.getPosition();
+
+        sf::CircleShape halo(30.f + pulso * 5.f);
+        halo.setOrigin(halo.getRadius(), halo.getRadius());
+        halo.setScale(1.18f, 0.72f);
+        halo.setPosition(pos.x, pos.y + 8.f);
+        halo.setFillColor(sf::Color(color.r, color.g, color.b, static_cast<sf::Uint8>(35 + pulso * 45)));
+        ventana.draw(halo);
+
+        if (powerup.tiempoVida <= 2.f) {
+            sf::Uint8 alpha = static_cast<sf::Uint8>(120 + pulso * 135);
+            item.setColor(sf::Color(255, 255, 255, alpha));
+        }
+
+        ventana.draw(item);
+
+        sf::RectangleShape fondo(sf::Vector2f(42.f, 5.f));
+        fondo.setOrigin(21.f, 2.5f);
+        fondo.setPosition(pos.x, pos.y + 31.f);
+        fondo.setFillColor(sf::Color(0, 0, 0, 165));
+        ventana.draw(fondo);
+
+        sf::RectangleShape tiempo(sf::Vector2f(40.f * ratio, 3.f));
+        tiempo.setOrigin(20.f, 1.5f);
+        tiempo.setPosition(pos.x, pos.y + 31.f);
+        tiempo.setFillColor(color);
+        ventana.draw(tiempo);
+
+        if (esTarjeta(powerup.tipo)) {
+            ui.dibujarTexto(ventana, std::to_string(std::max(1, static_cast<int>(std::ceil(powerup.tiempoVida)))), pos.x - 5.f, pos.y - 38.f, 14, color);
+        }
+    }
+
+    void dibujarFuegoArtificial(float cx, float cy, float radio, sf::Color color, float desfase) {
+        float pulso = 0.75f + std::sin(tiempoAnimacion * 2.6f + desfase) * 0.25f;
+        sf::VertexArray rayos(sf::Lines);
+
+        for (int i = 0; i < 18; ++i) {
+            float angulo = (6.28318f / 18.f) * i + desfase * 0.08f;
+            float interior = radio * 0.18f;
+            float exterior = radio * (0.72f + pulso * 0.28f);
+            sf::Vector2f a(cx + std::cos(angulo) * interior, cy + std::sin(angulo) * interior);
+            sf::Vector2f b(cx + std::cos(angulo) * exterior, cy + std::sin(angulo) * exterior);
+            rayos.append(sf::Vertex(a, sf::Color(255, 255, 255, 210)));
+            rayos.append(sf::Vertex(b, color));
+        }
+
+        ventana.draw(rayos);
+
+        sf::CircleShape centro(5.f + pulso * 3.f);
+        centro.setOrigin(centro.getRadius(), centro.getRadius());
+        centro.setPosition(cx, cy);
+        centro.setFillColor(sf::Color(255, 255, 255, 230));
+        ventana.draw(centro);
+    }
+
+    void dibujarCopaLigaMx(float x, float y, float escala) {
+        sf::ConvexShape copa;
+        copa.setPointCount(6);
+        copa.setPoint(0, sf::Vector2f(x - 33.f * escala, y - 70.f * escala));
+        copa.setPoint(1, sf::Vector2f(x + 33.f * escala, y - 70.f * escala));
+        copa.setPoint(2, sf::Vector2f(x + 22.f * escala, y - 14.f * escala));
+        copa.setPoint(3, sf::Vector2f(x + 9.f * escala, y + 2.f * escala));
+        copa.setPoint(4, sf::Vector2f(x - 9.f * escala, y + 2.f * escala));
+        copa.setPoint(5, sf::Vector2f(x - 22.f * escala, y - 14.f * escala));
+        copa.setFillColor(sf::Color(248, 204, 65));
+        copa.setOutlineColor(sf::Color(95, 60, 12));
+        copa.setOutlineThickness(3.f * escala);
+        ventana.draw(copa);
+
+        sf::CircleShape asa(24.f * escala);
+        asa.setFillColor(sf::Color::Transparent);
+        asa.setOutlineColor(sf::Color(248, 204, 65));
+        asa.setOutlineThickness(7.f * escala);
+        asa.setOrigin(24.f * escala, 24.f * escala);
+        asa.setScale(0.72f, 1.f);
+        asa.setPosition(x - 39.f * escala, y - 42.f * escala);
+        ventana.draw(asa);
+        asa.setPosition(x + 39.f * escala, y - 42.f * escala);
+        ventana.draw(asa);
+
+        sf::RectangleShape tallo(sf::Vector2f(16.f * escala, 38.f * escala));
+        tallo.setOrigin(8.f * escala, 0.f);
+        tallo.setPosition(x, y - 1.f * escala);
+        tallo.setFillColor(sf::Color(226, 157, 35));
+        ventana.draw(tallo);
+
+        sf::RectangleShape base(sf::Vector2f(86.f * escala, 18.f * escala));
+        base.setOrigin(43.f * escala, 0.f);
+        base.setPosition(x, y + 34.f * escala);
+        base.setFillColor(sf::Color(40, 46, 64));
+        base.setOutlineColor(sf::Color(12, 18, 30));
+        base.setOutlineThickness(2.f * escala);
+        ventana.draw(base);
+
+        sf::RectangleShape placa(sf::Vector2f(64.f * escala, 15.f * escala));
+        placa.setOrigin(32.f * escala, 0.f);
+        placa.setPosition(x, y + 37.f * escala);
+        placa.setFillColor(sf::Color(245, 210, 65));
+        ventana.draw(placa);
+        ui.dibujarTexto(ventana, "LIGA MX", x - 29.f * escala, y + 38.f * escala, static_cast<int>(13.f * escala), sf::Color::Black);
+    }
+
+    void dibujarPantallaVictoria() {
+        ventana.clear(sf::Color(12, 25, 42));
+
+        sf::RectangleShape cielo(sf::Vector2f(800.f, 230.f));
+        cielo.setFillColor(sf::Color(14, 31, 49));
+        ventana.draw(cielo);
+
+        for (int fila = 0; fila < 4; ++fila) {
+            for (int i = 0; i < 18; ++i) {
+                float x = 20.f + i * 45.f + (fila % 2) * 18.f;
+                float y = 50.f + fila * 43.f;
+                sf::CircleShape cabeza(8.f);
+                cabeza.setPosition(x, y);
+                cabeza.setFillColor(sf::Color(90, 78, 72, 160));
+                ventana.draw(cabeza);
+
+                sf::RectangleShape cuerpo(sf::Vector2f(18.f, 16.f));
+                cuerpo.setPosition(x - 1.f, y + 15.f);
+                cuerpo.setFillColor(i % 3 == 0 ? sf::Color(24, 49, 84, 150) : sf::Color(58, 70, 82, 145));
+                ventana.draw(cuerpo);
+            }
+        }
+
+        sf::RectangleShape grada(sf::Vector2f(800.f, 42.f));
+        grada.setPosition(0.f, 174.f);
+        grada.setFillColor(sf::Color(89, 112, 124, 215));
+        ventana.draw(grada);
+
+        sf::RectangleShape barda(sf::Vector2f(800.f, 18.f));
+        barda.setPosition(0.f, 216.f);
+        barda.setFillColor(sf::Color(28, 42, 55));
+        ventana.draw(barda);
+
+        sf::RectangleShape cancha(sf::Vector2f(800.f, 366.f));
+        cancha.setPosition(0.f, 234.f);
+        cancha.setFillColor(sf::Color(66, 153, 62));
+        ventana.draw(cancha);
+
+        for (int i = 0; i < 8; ++i) {
+            sf::RectangleShape franja(sf::Vector2f(120.f, 366.f));
+            franja.setPosition(i * 110.f - 25.f, 234.f);
+            franja.setFillColor(i % 2 == 0 ? sf::Color(78, 171, 70, 90) : sf::Color(40, 120, 54, 80));
+            ventana.draw(franja);
+        }
+
+        sf::CircleShape circuloMedio(158.f);
+        circuloMedio.setOrigin(158.f, 158.f);
+        circuloMedio.setPosition(400.f, 505.f);
+        circuloMedio.setFillColor(sf::Color::Transparent);
+        circuloMedio.setOutlineColor(sf::Color(230, 245, 225, 210));
+        circuloMedio.setOutlineThickness(5.f);
+        ventana.draw(circuloMedio);
+
+        sf::RectangleShape linea(sf::Vector2f(5.f, 366.f));
+        linea.setPosition(398.f, 234.f);
+        linea.setFillColor(sf::Color(230, 245, 225, 195));
+        ventana.draw(linea);
+
+        sf::RectangleShape tableroSombra(sf::Vector2f(540.f, 184.f));
+        tableroSombra.setPosition(140.f, 20.f);
+        tableroSombra.setFillColor(sf::Color(0, 0, 0, 120));
+        ventana.draw(tableroSombra);
+
+        sf::RectangleShape tablero(sf::Vector2f(520.f, 170.f));
+        tablero.setPosition(140.f, 14.f);
+        tablero.setFillColor(sf::Color(8, 22, 27, 238));
+        tablero.setOutlineColor(sf::Color(172, 191, 197));
+        tablero.setOutlineThickness(5.f);
+        ventana.draw(tablero);
+
+        sf::RectangleShape pantallaA(sf::Vector2f(498.f, 56.f));
+        pantallaA.setPosition(151.f, 25.f);
+        pantallaA.setFillColor(sf::Color(13, 34, 35, 245));
+        pantallaA.setOutlineColor(sf::Color(61, 77, 83));
+        pantallaA.setOutlineThickness(2.f);
+        ventana.draw(pantallaA);
+
+        sf::RectangleShape pantallaB(sf::Vector2f(498.f, 88.f));
+        pantallaB.setPosition(151.f, 90.f);
+        pantallaB.setFillColor(sf::Color(13, 34, 35, 245));
+        pantallaB.setOutlineColor(sf::Color(61, 77, 83));
+        pantallaB.setOutlineThickness(2.f);
+        ventana.draw(pantallaB);
+
+        dibujarTextoSombra("FINAL DEL PARTIDO", 218.f, 36.f, 34, sf::Color::White);
+        dibujarTextoSombra("GANASTE", 255.f, 101.f, 43, sf::Color(245, 210, 65));
+        dibujarTextoSombra("CAMPEON DE LIGA MX", 188.f, 142.f, 31, sf::Color(245, 210, 65));
+
+        auto dibujarPersonajeCelebrando = [&](int idx, float x, float y, float alto, bool espejo, int frame) {
+            if (idx < 0 || idx >= 6 || tPersonajes[idx].getSize().x == 0) return;
+
+            int columnas = columnasPersonaje(idx);
+            int frameW = static_cast<int>(tPersonajes[idx].getSize().x) / columnas;
+            int frameH = static_cast<int>(tPersonajes[idx].getSize().y);
+            frame = std::max(0, std::min(columnas - 1, frame));
+
+            sf::Sprite sprite(tPersonajes[idx]);
+            sprite.setTextureRect(sf::IntRect(frame * frameW, 0, frameW, frameH));
+            sprite.setOrigin(frameW / 2.f, frameH * 0.92f);
+            float escala = alto / static_cast<float>(frameH);
+            sprite.setScale(espejo ? -escala : escala, escala);
+            sprite.setPosition(x, y);
+            ventana.draw(sprite);
+        };
+
+        float brinco = std::sin(tiempoAnimacion * 5.5f) * 7.f;
+        dibujarPersonajeCelebrando(personajeSeleccionadoIdx, 82.f, 500.f, 118.f, false, 1);
+        dibujarPersonajeCelebrando(personajeSeleccionadoIdx, 710.f, 500.f, 118.f, true, 1);
+
+        sf::CircleShape sombraCentral(76.f);
+        sombraCentral.setOrigin(76.f, 22.f);
+        sombraCentral.setScale(1.35f, 0.34f);
+        sombraCentral.setPosition(400.f, 536.f);
+        sombraCentral.setFillColor(sf::Color(0, 0, 0, 115));
+        ventana.draw(sombraCentral);
+
+        dibujarPersonajeCelebrando(personajeSeleccionadoIdx, 400.f, 536.f + brinco, 245.f, false, 0);
+        dibujarCopaLigaMx(400.f, 286.f + brinco, 0.9f);
+
+        for (int i = 0; i < 86; ++i) {
+            float base = static_cast<float>(i);
+            float x = std::fmod(base * 61.f + tiempoAnimacion * (38.f + (i % 4) * 11.f), 850.f) - 25.f;
+            float y = std::fmod(base * 37.f + tiempoAnimacion * (72.f + (i % 5) * 9.f), 620.f) - 20.f;
+            sf::RectangleShape papel(sf::Vector2f(10.f + (i % 3) * 4.f, 5.f));
+            papel.setPosition(x, y);
+            papel.setRotation(std::fmod(tiempoAnimacion * 120.f + base * 29.f, 360.f));
+            if (i % 4 == 0) papel.setFillColor(sf::Color(245, 210, 65, 225));
+            else if (i % 4 == 1) papel.setFillColor(sf::Color(255, 255, 255, 230));
+            else if (i % 4 == 2) papel.setFillColor(sf::Color(32, 91, 168, 220));
+            else papel.setFillColor(sf::Color(110, 245, 150, 205));
+            ventana.draw(papel);
+        }
+
+        sf::RectangleShape marcador(sf::Vector2f(760.f, 40.f));
+        marcador.setPosition(20.f, 552.f);
+        marcador.setFillColor(sf::Color(4, 18, 42, 218));
+        marcador.setOutlineColor(sf::Color(245, 210, 65));
+        marcador.setOutlineThickness(2.f);
+        ventana.draw(marcador);
+        ui.dibujarTexto(ventana, nombresPersonajes[personajeSeleccionadoIdx], 48.f, 562.f, 15, sf::Color::White);
+        ui.dibujarTexto(ventana, "Puntos: " + std::to_string(puntos), 250.f, 562.f, 15, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "Tiempo: " + std::to_string((int)tiempoTotalJuego) + "s", 385.f, 562.f, 15, sf::Color::White);
+        ui.dibujarTexto(ventana, "ENTER / CLICK para volver al Menu", 520.f, 562.f, 14, sf::Color(110, 245, 150));
+    }
+
+    void dibujarPantallaGameOver() {
+        ventana.clear(sf::Color(16, 4, 8));
+
+        if (nivel >= 1 && nivel <= 5 && tEscenarios[nivel - 1].getSize().x > 0 && tEscenarios[nivel - 1].getSize().y > 0) {
+            sf::Sprite fondo(tEscenarios[nivel - 1]);
+            fondo.setScale(800.f / fondo.getLocalBounds().width, 600.f / fondo.getLocalBounds().height);
+            ventana.draw(fondo);
+        } else {
+            dibujarFondoMenu();
+        }
+
+        sf::RectangleShape velo(sf::Vector2f(800.f, 600.f));
+        velo.setFillColor(sf::Color(25, 0, 0, 155));
+        ventana.draw(velo);
+
+        sf::RectangleShape panel(sf::Vector2f(610.f, 310.f));
+        panel.setPosition(95.f, 130.f);
+        panel.setFillColor(sf::Color(8, 10, 18, 220));
+        panel.setOutlineColor(sf::Color(255, 65, 55));
+        panel.setOutlineThickness(3.f);
+        ventana.draw(panel);
+
+        dibujarTextoSombra("GAME OVER", 245.f, 160.f, 54, sf::Color(255, 80, 70));
+        ui.dibujarTexto(ventana, "La ultima jugada dolio, pero el estadio sigue esperando.", 155.f, 238.f, 17, sf::Color(230, 230, 230));
+
+        sf::RectangleShape linea(sf::Vector2f(470.f, 2.f));
+        linea.setPosition(165.f, 282.f);
+        linea.setFillColor(sf::Color(255, 80, 70, 160));
+        ventana.draw(linea);
+
+        ui.dibujarTexto(ventana, "Puntaje alcanzado: " + std::to_string(puntos), 232.f, 310.f, 22, sf::Color::White);
+        ui.dibujarTexto(ventana, "Nivel alcanzado: " + std::to_string(nivel), 258.f, 350.f, 22, sf::Color(245, 210, 65));
+        ui.dibujarTexto(ventana, "ENTER / CLICK para volver al Menu", 218.f, 402.f, 18, sf::Color(110, 245, 150));
+    }
+
     void actualizarMusica() {
         if (!AUDIO_ACTIVO) return;
 
@@ -772,6 +1123,7 @@ public:
         tBanda = Recursos::cargarTexturaPowerUp("banda");
         tAmarilla = Recursos::cargarTexturaPowerUp("amarilla");
         tRoja = Recursos::cargarTexturaPowerUp("roja");
+        tCorazon = Recursos::cargarTexturaPowerUp("corazon");
 
         // Cargar texturas de enemigos
         for(int i = 1; i <= 5; ++i) {
@@ -790,6 +1142,8 @@ public:
 
         tMenuFondo.loadFromFile(Recursos::rutaArchivo("assets/images/Portadajuego.png"));
         tMenuFondo.setSmooth(true);
+        tInstruccionesFondo.loadFromFile(Recursos::rutaArchivo("assets/images/intruccionesdejuego.png"));
+        tInstruccionesFondo.setSmooth(true);
 
         if (AUDIO_ACTIVO) {
         // Cargar sonidos
@@ -910,7 +1264,7 @@ private:
                     if (evento.key.code == sf::Keyboard::Num1) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::Num2) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::Num3) ejecutarOpcionMenu(2);
-                    if (evento.key.code == sf::Keyboard::Num4) opcionMenuHover = 3;
+                    if (evento.key.code == sf::Keyboard::Num4) ejecutarOpcionMenu(3);
                     if (evento.key.code == sf::Keyboard::P) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::E) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::I) ejecutarOpcionMenu(2);
@@ -1035,6 +1389,19 @@ private:
                 it = powerups.erase(it);
                 tiempoSpawnPowerUp = 0.f;
             } else if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
+<<<<<<< HEAD
+                if (it->tipo == PowerUpType::VIDA_EXTRA) {
+                    if (jugador.vidas < 3) {
+                        jugador.vidas++;
+                        reproducirSonido(sonidoSilbato);
+                    }
+                    it = powerups.erase(it);
+                    tiempoSpawnPowerUp = 0.f;
+                    continue;
+                }
+
+=======
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 poderActivo = it->tipo;
                 tiempoSpawnPowerUp = 0.f;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
@@ -1064,53 +1431,51 @@ private:
         ventana.clear(sf::Color(34, 139, 34)); 
 
         if (estadoActual == GameState::MENU) {
-            dibujarFondoMenu();
-            dibujarEfectosPortada();
+            ventana.clear(sf::Color(2, 9, 24));
 
-            sf::RectangleShape tituloBack(sf::Vector2f(430.f, 118.f));
-            tituloBack.setPosition(38.f, 54.f);
-            tituloBack.setFillColor(sf::Color(0, 0, 0, 115));
-            tituloBack.setOutlineColor(sf::Color(80, 210, 255, 180));
-            tituloBack.setOutlineThickness(2.f);
-            ventana.draw(tituloBack);
-
-            dibujarTextoSombra("THE LAST", 58.f, 65.f, 48, sf::Color(245, 245, 245));
-            dibujarTextoSombra("DANCE", 58.f, 108.f, 58, sf::Color(245, 210, 65));
-            ui.dibujarTexto(ventana, "COPA DE BARRIO", 62.f, 178.f, 17, sf::Color(110, 245, 150));
-
-            sf::RectangleShape panelMenu(sf::Vector2f(305.f, 338.f));
-            panelMenu.setPosition(477.f, 196.f);
-            panelMenu.setFillColor(sf::Color(0, 0, 0, 120));
-            panelMenu.setOutlineColor(sf::Color(255, 255, 255, 55));
-            panelMenu.setOutlineThickness(2.f);
-            ventana.draw(panelMenu);
-
-            sf::RectangleShape barraPanel(sf::Vector2f(235.f, 5.f));
-            barraPanel.setPosition(512.f, 211.f);
-            barraPanel.setFillColor(sf::Color(245, 210, 65));
-            ventana.draw(barraPanel);
-
-            ui.dibujarTexto(ventana, "Futbol Mexicano Multiverse", 500.f, 178.f, 15, sf::Color(110, 245, 150));
-
-            dibujarPersonajeMenu(0, 170.f, 455.f, 170.f, false);
-            dibujarPersonajeMenu(1, 290.f, 462.f, 150.f, false);
-            dibujarPersonajeMenu(4, 405.f, 455.f, 160.f, true);
-
-            if (tBalon.getSize().x > 0 && tBalon.getSize().y > 0) {
-                sf::Sprite balonMenu(tBalon);
-                balonMenu.setOrigin(tBalon.getSize().x / 2.f, tBalon.getSize().y / 2.f);
-                balonMenu.setScale(0.42f, 0.42f);
-                balonMenu.setRotation(tiempoAnimacion * 130.f);
-                balonMenu.setPosition(385.f + std::sin(tiempoAnimacion * 2.2f) * 55.f, 240.f + std::cos(tiempoAnimacion * 2.8f) * 22.f);
-                ventana.draw(balonMenu);
+            if (tMenuFondo.getSize().x > 0 && tMenuFondo.getSize().y > 0) {
+                sf::Sprite portada(tMenuFondo);
+                float escala = std::min(
+                    800.f / portada.getLocalBounds().width,
+                    600.f / portada.getLocalBounds().height
+                );
+                portada.setScale(escala, escala);
+                portada.setPosition(
+                    (800.f - portada.getLocalBounds().width * escala) * 0.5f,
+                    (600.f - portada.getLocalBounds().height * escala) * 0.5f
+                );
+                ventana.draw(portada);
+            } else {
+                dibujarFondoMenu();
             }
 
-            dibujarBotonMenu(0, "PLAY", 245, sf::Color(245, 210, 65));
-            dibujarBotonMenu(1, "RIVALES", 311, sf::Color(150, 75, 190));
-            dibujarBotonMenu(2, "INSTRUCCIONES", 377, sf::Color(50, 175, 35));
-            dibujarBotonMenu(3, "SALIR", 443, sf::Color(210, 55, 35));
+            if (opcionMenuHover >= 0) {
+                sf::FloatRect rect = rectBotonMenu(opcionMenuHover);
+                float pulso = (std::sin(tiempoAnimacion * 8.f) + 1.f) * 0.5f;
 
-            dibujarResumenPortada();
+                sf::RectangleShape brillo(sf::Vector2f(rect.width, rect.height));
+                brillo.setPosition(rect.left, rect.top);
+                brillo.setFillColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(22 + pulso * 22)));
+                ventana.draw(brillo);
+
+                sf::ConvexShape indicador;
+                indicador.setPointCount(3);
+                float x = rect.left - 16.f + pulso * 5.f;
+                float y = rect.top + rect.height * 0.5f;
+                if (opcionMenuHover == 0) {
+                    x = rect.left + rect.width * 0.5f - 16.f;
+                    y = rect.top + rect.height + 15.f + pulso * 5.f;
+                    indicador.setPoint(0, sf::Vector2f(x, y));
+                    indicador.setPoint(1, sf::Vector2f(x + 32.f, y));
+                    indicador.setPoint(2, sf::Vector2f(x + 16.f, y + 22.f));
+                } else {
+                    indicador.setPoint(0, sf::Vector2f(x, y - 15.f));
+                    indicador.setPoint(1, sf::Vector2f(x, y + 15.f));
+                    indicador.setPoint(2, sf::Vector2f(x + 24.f, y));
+                }
+                indicador.setFillColor(sf::Color(245, 210, 65, 235));
+                ventana.draw(indicador);
+            }
         } 
         else if (estadoActual == GameState::PERSONAJES) {
             dibujarPantallaPersonajes();
@@ -1215,7 +1580,7 @@ private:
                 }
                 ventana.draw(jefeAnimado);
 
-                float hpRatio = std::max(0.f, std::min(1.f, jefe->vida / static_cast<float>(18 + nivel * 5)));
+                float hpRatio = std::max(0.f, std::min(1.f, jefe->vida / static_cast<float>(Enemigo::VIDA_MAXIMA)));
                 sf::RectangleShape hpBack(sf::Vector2f(86.f, 8.f));
                 hpBack.setOrigin(43.f, 4.f);
                 hpBack.setPosition(jefe->sprite.getPosition().x, jefe->sprite.getPosition().y - 44.f);
@@ -1230,7 +1595,7 @@ private:
             }
             for (auto& b : balones) ventana.draw(b.sprite);
             for (auto& a : ataques) ventana.draw(a.sprite);
-            for (auto& p : powerups) ventana.draw(p.sprite);
+            for (auto& p : powerups) dibujarPowerUpConFeedback(p);
             dibujarFlashGolpeJefe();
 
             ui.dibujarHUD(ventana, puntos, nivel, jugador.vidas, (jefe ? jefe->vida : 0), poderActivo, tiempoPoder);
@@ -1239,16 +1604,10 @@ private:
             dibujarTransicionNivel();
         }
         else if (estadoActual == GameState::VICTORIA) {
-            ui.dibujarTexto(ventana, "¡ERES EL CAMPEON DE LA COPA!", 160, 150, 35, sf::Color::Yellow);
-            ui.dibujarTexto(ventana, "Puntaje Final: " + std::to_string(puntos), 280, 240, 24, sf::Color::White);
-            ui.dibujarTexto(ventana, "Tiempo de Juego: " + std::to_string((int)tiempoTotalJuego) + " segundos", 220, 290, 24, sf::Color::White);
-            ui.dibujarTexto(ventana, "Presiona [ENTER] para volver al Menu", 200, 400, 22, sf::Color::Green);
+            dibujarPantallaVictoria();
         }
         else if (estadoActual == GameState::GAMEOVER) {
-            ui.dibujarTexto(ventana, "GAME OVER (TARJETA ROJA O SIN VIDAS)", 120, 150, 32, sf::Color::Red);
-            ui.dibujarTexto(ventana, "Puntaje Alcanzado: " + std::to_string(puntos), 260, 240, 24, sf::Color::White);
-            ui.dibujarTexto(ventana, "Nivel Alcanzado: Nvl " + std::to_string(nivel), 260, 290, 24, sf::Color::White);
-            ui.dibujarTexto(ventana, "Presiona [ENTER] para ir al Menu Principal", 180, 400, 22, sf::Color::Yellow);
+            dibujarPantallaGameOver();
         }
 
         ventana.display();

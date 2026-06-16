@@ -82,6 +82,8 @@ Juego cerrado normalmente
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
+<<<<<<< HEAD
+=======
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
@@ -91,6 +93,7 @@ Juego cerrado normalmente
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
+<<<<<<< HEAD
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
@@ -100,3 +103,6 @@ Juego cerrado normalmente
 Iniciando juego
 Juego creado
 Juego cerrado normalmente
+=======
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
+>>>>>>> 92eadc42c65d7ae54f99b2716b6435c5a869e085

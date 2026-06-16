@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-enum class PowerUpType { NINGUNO, TAQUETES, ESPINILLERAS, GUANTES, BANDA_CAPITAN, TARJETA_AMARILLA, TARJETA_ROJA };
+enum class PowerUpType { NINGUNO, TAQUETES, ESPINILLERAS, GUANTES, BANDA_CAPITAN, TARJETA_AMARILLA, TARJETA_ROJA, VIDA_EXTRA };
 
 class Balon {
 public:
@@ -46,8 +46,14 @@ public:
     PowerUpType tipo;
     float velocidadY;
     float tiempoVida;
+<<<<<<< HEAD
+    float duracionInicial;
+
+    PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex, float velY = 0.f, float duracion = 5.f) : tipo(t), velocidadY(velY), tiempoVida(duracion), duracionInicial(duracion) {
+=======
 
     PowerUp(float x, float y, PowerUpType t, const sf::Texture& tex, float velY = 0.f) : tipo(t), velocidadY(velY), tiempoVida(5.f) {
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
@@ -62,4 +68,15 @@ public:
     bool expiro() const {
         return tiempoVida <= 0.f;
     }
+<<<<<<< HEAD
+
+    float vidaNormalizada() const {
+        if (duracionInicial <= 0.f) return 0.f;
+        float ratio = tiempoVida / duracionInicial;
+        if (ratio < 0.f) return 0.f;
+        if (ratio > 1.f) return 1.f;
+        return ratio;
+    }
+=======
+>>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
 };
