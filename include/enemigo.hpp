@@ -6,6 +6,8 @@
 
 class Enemigo {
 public:
+    static constexpr int VIDA_MAXIMA = 20;
+
     sf::Sprite sprite;
     sf::Texture textura;
     std::string nombre;
@@ -20,7 +22,7 @@ public:
     Enemigo(std::string nom, int nvl, const sf::Texture& tex) {
         nombre = nom;
         nivel = nvl;
-        vida = 18 + (nvl * 5);
+        vida = VIDA_MAXIMA;
         velocidad = 185.f + (nvl * 58.f); 
         x = 400.f; y = 100.f;
         direccion = 1;

@@ -121,37 +121,23 @@ private:
     }
 
     void generarPowerUp() {
-        bool generarCorazon = (std::rand() % 10) == 0;
-        PowerUpType randomTipo = generarCorazon ? PowerUpType::VIDA_EXTRA : static_cast<PowerUpType>((std::rand() % 6) + 1);
+        PowerUpType tiposNormales[6] = {
+            PowerUpType::TAQUETES,
+            PowerUpType::ESPINILLERAS,
+            PowerUpType::GUANTES,
+            PowerUpType::BANDA_CAPITAN,
+            PowerUpType::TARJETA_AMARILLA,
+            PowerUpType::TARJETA_ROJA
+        };
+        bool generarCorazon = (std::rand() % 4) == 0;
+        PowerUpType randomTipo = generarCorazon ? PowerUpType::VIDA_EXTRA : tiposNormales[std::rand() % 6];
         float posicionesY[4] = {520.f, 455.f, 405.f, 365.f};
         float x = static_cast<float>(std::rand() % 680 + 60);
         float y = posicionesY[std::rand() % 4];
-        float duracionVisible = esTarjeta(randomTipo) ? 5.f : (randomTipo == PowerUpType::VIDA_EXTRA ? 6.f : 7.f);
+        float duracionVisible = esTarjeta(randomTipo) ? 5.f : (randomTipo == PowerUpType::VIDA_EXTRA ? 8.f : 7.f);
 
         powerups.clear();
         powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo), 0.f, duracionVisible));
-    }
-
-    void crearTexturaCorazon() {
-        const unsigned int size = 96;
-        sf::Image img;
-        img.create(size, size, sf::Color::Transparent);
-
-        for (unsigned int y = 0; y < size; ++y) {
-            for (unsigned int x = 0; x < size; ++x) {
-                float nx = (static_cast<float>(x) - 48.f) / 25.f;
-                float ny = (static_cast<float>(y) - 48.f) / 25.f;
-                float formula = std::pow(nx * nx + ny * ny - 1.f, 3.f) - nx * nx * ny * ny * ny;
-                if (formula <= 0.f) {
-                    bool borde = formula > -0.20f;
-                    sf::Uint8 brillo = static_cast<sf::Uint8>(std::max(0.f, 80.f - y * 0.7f));
-                    img.setPixel(x, y, borde ? sf::Color(255, 245, 245, 255) : sf::Color(230 + brillo / 4, 30 + brillo / 5, 76 + brillo / 3, 255));
-                }
-            }
-        }
-
-        tCorazon.loadFromImage(img);
-        tCorazon.setSmooth(true);
     }
 
     void dibujarFondoMenu() {
@@ -906,17 +892,17 @@ private:
             }
             campeon.setTextureRect(sf::IntRect(0, 0, frameW, frameH));
             campeon.setOrigin(frameW / 2.f, frameH * 0.92f);
-            float escala = 205.f / static_cast<float>(frameH);
+            float escala = 190.f / static_cast<float>(frameH);
             float salto = std::sin(tiempoAnimacion * 5.5f) * 10.f;
             campeon.setScale(escala, escala);
-            campeon.setPosition(400.f, 520.f + salto);
+            campeon.setPosition(310.f, 520.f + salto);
             ventana.draw(campeon);
         }
 
-        dibujarCopaLigaMx(400.f, 354.f + std::sin(tiempoAnimacion * 5.5f) * 6.f, 1.05f);
+        dibujarCopaLigaMx(455.f, 372.f + std::sin(tiempoAnimacion * 5.5f) * 6.f, 0.78f);
 
         sf::RectangleShape globo(sf::Vector2f(250.f, 72.f));
-        globo.setPosition(490.f, 235.f);
+        globo.setPosition(492.f, 248.f);
         globo.setFillColor(sf::Color(255, 255, 255, 235));
         globo.setOutlineColor(sf::Color(15, 25, 45));
         globo.setOutlineThickness(3.f);
@@ -924,16 +910,16 @@ private:
 
         sf::ConvexShape punta;
         punta.setPointCount(3);
-        punta.setPoint(0, sf::Vector2f(510.f, 300.f));
-        punta.setPoint(1, sf::Vector2f(458.f, 338.f));
-        punta.setPoint(2, sf::Vector2f(538.f, 305.f));
+        punta.setPoint(0, sf::Vector2f(512.f, 313.f));
+        punta.setPoint(1, sf::Vector2f(425.f, 355.f));
+        punta.setPoint(2, sf::Vector2f(540.f, 318.f));
         punta.setFillColor(sf::Color(255, 255, 255, 235));
         punta.setOutlineColor(sf::Color(15, 25, 45));
         punta.setOutlineThickness(2.f);
         ventana.draw(punta);
 
-        ui.dibujarTexto(ventana, "FELICIDADES!", 528.f, 252.f, 26, sf::Color(18, 24, 40));
-        ui.dibujarTexto(ventana, nombresPersonajes[personajeSeleccionadoIdx], 530.f, 283.f, 15, sf::Color(42, 80, 145));
+        ui.dibujarTexto(ventana, "FELICIDADES!", 528.f, 265.f, 26, sf::Color(18, 24, 40));
+        ui.dibujarTexto(ventana, nombresPersonajes[personajeSeleccionadoIdx], 530.f, 296.f, 15, sf::Color(42, 80, 145));
 
         sf::RectangleShape marcador(sf::Vector2f(610.f, 62.f));
         marcador.setPosition(95.f, 514.f);
@@ -1054,7 +1040,7 @@ public:
         tBanda = Recursos::cargarTexturaPowerUp("banda");
         tAmarilla = Recursos::cargarTexturaPowerUp("amarilla");
         tRoja = Recursos::cargarTexturaPowerUp("roja");
-        crearTexturaCorazon();
+        tCorazon = Recursos::cargarTexturaPowerUp("corazon");
 
         // Cargar texturas de enemigos
         for(int i = 1; i <= 5; ++i) {
@@ -1193,7 +1179,7 @@ private:
                     if (evento.key.code == sf::Keyboard::Num1) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::Num2) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::Num3) ejecutarOpcionMenu(2);
-                    if (evento.key.code == sf::Keyboard::Num4) opcionMenuHover = 3;
+                    if (evento.key.code == sf::Keyboard::Num4) ejecutarOpcionMenu(3);
                     if (evento.key.code == sf::Keyboard::P) ejecutarOpcionMenu(0);
                     if (evento.key.code == sf::Keyboard::E) ejecutarOpcionMenu(1);
                     if (evento.key.code == sf::Keyboard::I) ejecutarOpcionMenu(2);
@@ -1507,7 +1493,7 @@ private:
                 }
                 ventana.draw(jefeAnimado);
 
-                float hpRatio = std::max(0.f, std::min(1.f, jefe->vida / static_cast<float>(18 + nivel * 5)));
+                float hpRatio = std::max(0.f, std::min(1.f, jefe->vida / static_cast<float>(Enemigo::VIDA_MAXIMA)));
                 sf::RectangleShape hpBack(sf::Vector2f(86.f, 8.f));
                 hpBack.setOrigin(43.f, 4.f);
                 hpBack.setPosition(jefe->sprite.getPosition().x, jefe->sprite.getPosition().y - 44.f);
