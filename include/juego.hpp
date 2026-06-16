@@ -38,7 +38,7 @@ private:
     sf::Music* musicaFondo;
     sf::Music* musicaMenu;
     bool musicaJuegoActiva;
-    sf::Sound *sonidoLanzamiento, *sonidoSilbato, *sonidoEnemigoDerrota, *sonidoDerrota, *sonidoVictoria, *sonidoHover;
+    sf::Sound *sonidoLanzamiento, *sonidoSilbato, *sonidoEnemigoDerrota, *sonidoDerrota, *sonidoVictoria, *sonidoHover, *sonidoGritoGol;
     sf::Sound* sonidosJugador[6];
     sf::Sound* sonidosGolpeJugador[6];
     sf::Sound* sonidosGolpeJefe[5];
@@ -61,6 +61,7 @@ private:
     float tiempoSacudida;
     float tiempoSpawnPowerUp;
     float tiempoDisparoJugador;
+    float tiempoGolCambio;
     int ultimoJefeDerrotado;
 
     std::string nombresEnemigos[5] = {"Katie Itzel", "Gata Ortencia", "Telecomerciales", "Funko Arreola", "Mafia Mayor"};
@@ -81,6 +82,7 @@ private:
         tiempoDisparoJugador = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
+        tiempoGolCambio = (nvl > 1) ? 2.35f : 0.f;
         reproducirSonido(sonidoSilbato);
     }
 
@@ -137,11 +139,7 @@ private:
         float duracionVisible = esTarjeta(randomTipo) ? 5.f : (randomTipo == PowerUpType::VIDA_EXTRA ? 8.f : 7.f);
 
         powerups.clear();
-<<<<<<< HEAD
         powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo), 0.f, duracionVisible));
-=======
-        powerups.push_back(PowerUp(x, y, randomTipo, texturaParaPowerUp(randomTipo)));
->>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     void dibujarFondoMenu() {
@@ -249,16 +247,9 @@ private:
     }
 
     int columnasPersonaje(int idx) {
-<<<<<<< HEAD
         if (idx == 3) return 3;
         if (idx == 5) return 8;
         return 4;
-=======
-        if (idx == 2) return 3;
-        if (idx == 3) return 3;
-        if (idx == 5) return 8;
-        return idx == 4 ? 5 : 4;
->>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
     }
 
     sf::Sound* crearSonido(sf::SoundBuffer& buffer, float volumen, float tono = 1.f) {
@@ -557,12 +548,8 @@ private:
             sf::FloatRect bounds = preview.getLocalBounds();
             if (bounds.width > 0.f && bounds.height > 0.f) {
                 preview.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-<<<<<<< HEAD
                 float escala = std::min(118.f / bounds.width, 142.f / bounds.height);
                 if (hover) escala *= 1.08f;
-=======
-                float escala = std::min(88.f / bounds.width, 98.f / bounds.height);
->>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 preview.setScale(escala, escala);
                 preview.setPosition(rect.left + rect.width * 0.5f, rect.top + 82.f);
 
@@ -642,111 +629,99 @@ private:
         dibujarFondoMenu();
 
         sf::RectangleShape capa(sf::Vector2f(800.f, 600.f));
-        capa.setFillColor(sf::Color(0, 0, 0, 95));
+        capa.setFillColor(sf::Color(0, 0, 0, 130));
         ventana.draw(capa);
 
         dibujarLucesEstadio(78.f);
 
-        float entrada = std::min(1.f, tiempoTransicionNivel / 0.55f);
-        float panelY = 65.f + (1.f - entrada) * 36.f;
-        float pulso = (std::sin(tiempoAnimacion * 5.f) + 1.f) * 0.5f;
-        int nivelAnterior = std::max(1, nivel - 1);
+        float entrada = std::min(1.f, tiempoTransicionNivel / 0.42f);
+        float pulso = (std::sin(tiempoAnimacion * 7.f) + 1.f) * 0.5f;
+        float golpe = std::max(0.f, 1.f - tiempoTransicionNivel / 0.75f);
+        float sacudida = std::sin(tiempoAnimacion * 45.f) * golpe * 10.f;
 
-        sf::RectangleShape panel(sf::Vector2f(690.f, 475.f));
-        panel.setPosition(55.f, panelY);
-        panel.setFillColor(sf::Color(6, 20, 18, 235));
-        panel.setOutlineColor(sf::Color(245, 210, 65));
+        sf::RectangleShape flash(sf::Vector2f(800.f, 600.f));
+        flash.setFillColor(sf::Color(255, 238, 70, static_cast<sf::Uint8>(95.f * golpe)));
+        ventana.draw(flash);
+
+        for (int i = 0; i < 5; ++i) {
+            float radio = 58.f + std::fmod(tiempoTransicionNivel * 230.f + i * 45.f, 260.f);
+            sf::CircleShape onda(radio);
+            onda.setOrigin(radio, radio);
+            onda.setPosition(400.f, 200.f);
+            onda.setFillColor(sf::Color::Transparent);
+            float fade = 1.f - std::min(1.f, radio / 320.f);
+            onda.setOutlineColor(sf::Color(255, 238, 70, static_cast<sf::Uint8>(150.f * fade)));
+            onda.setOutlineThickness(4.f);
+            ventana.draw(onda);
+        }
+
+        for (int i = 0; i < 42; ++i) {
+            float baseX = std::fmod(i * 61.f + tiempoTransicionNivel * (120.f + (i % 5) * 25.f), 880.f) - 40.f;
+            float y = std::fmod(i * 37.f + tiempoTransicionNivel * (210.f + (i % 4) * 35.f), 650.f) - 40.f;
+            sf::RectangleShape papel(sf::Vector2f(10.f + (i % 3) * 4.f, 5.f + (i % 2) * 5.f));
+            papel.setOrigin(papel.getSize().x / 2.f, papel.getSize().y / 2.f);
+            papel.setPosition(baseX, y);
+            papel.setRotation(std::fmod(tiempoAnimacion * 190.f + i * 31.f, 360.f));
+            sf::Color colores[4] = {
+                sf::Color(255, 238, 70, 220),
+                sf::Color(80, 210, 255, 220),
+                sf::Color(255, 90, 95, 220),
+                sf::Color(110, 245, 150, 220)
+            };
+            papel.setFillColor(colores[i % 4]);
+            ventana.draw(papel);
+        }
+
+        sf::RectangleShape panel(sf::Vector2f(650.f, 245.f));
+        panel.setOrigin(325.f, 122.5f);
+        panel.setPosition(400.f, 342.f + (1.f - entrada) * 34.f);
+        panel.setFillColor(sf::Color(4, 18, 24, 210));
+        panel.setOutlineColor(sf::Color(255, 238, 70, 210));
         panel.setOutlineThickness(3.f);
         ventana.draw(panel);
 
-        sf::RectangleShape banda(sf::Vector2f(690.f, 64.f));
-        banda.setPosition(55.f, panelY);
-        banda.setFillColor(sf::Color(18, 115, 60, 235));
-        ventana.draw(banda);
+        sf::CircleShape balonFestejo(58.f + pulso * 6.f);
+        balonFestejo.setOrigin(balonFestejo.getRadius(), balonFestejo.getRadius());
+        balonFestejo.setPosition(400.f + sacudida, 214.f);
+        balonFestejo.setFillColor(sf::Color(245, 245, 245, 235));
+        balonFestejo.setOutlineColor(sf::Color(20, 24, 24, 245));
+        balonFestejo.setOutlineThickness(7.f);
+        ventana.draw(balonFestejo);
 
-        float brilloX = 55.f + std::fmod(tiempoAnimacion * 260.f, 690.f);
-        sf::RectangleShape brillo(sf::Vector2f(95.f, 475.f));
-        brillo.setPosition(brilloX, panelY);
-        brillo.setFillColor(sf::Color(255, 255, 255, 22));
-        ventana.draw(brillo);
+        for (int i = 0; i < 5; ++i) {
+            sf::RectangleShape marca(sf::Vector2f(62.f, 8.f));
+            marca.setOrigin(31.f, 4.f);
+            marca.setPosition(400.f + sacudida, 214.f);
+            marca.setRotation(i * 72.f + tiempoAnimacion * 60.f);
+            marca.setFillColor(sf::Color(20, 24, 24, 210));
+            ventana.draw(marca);
+        }
 
-        dibujarTextoSombra("TRANSICION DE NIVEL", 175.f, panelY + 12.f, 34, sf::Color::White);
+        unsigned int tamGol = static_cast<unsigned int>(82.f + pulso * 12.f + golpe * 20.f);
+        dibujarTextoSombra("GOOOOL", 205.f + sacudida, 58.f - golpe * 10.f, tamGol, sf::Color(255, 238, 70));
+        dibujarTextoSombra("FIN DE RONDA", 294.f, 146.f, 28, sf::Color::White);
 
-        sf::RectangleShape tarjetaIzq(sf::Vector2f(250.f, 170.f));
-        tarjetaIzq.setPosition(95.f, panelY + 105.f);
-        tarjetaIzq.setFillColor(sf::Color(10, 30, 28, 245));
-        tarjetaIzq.setOutlineColor(sf::Color(245, 210, 65));
-        tarjetaIzq.setOutlineThickness(2.f);
-        ventana.draw(tarjetaIzq);
+        ui.dibujarTexto(ventana, "Rival derrotado: " + nombresEnemigos[ultimoJefeDerrotado], 122.f, 279.f, 24, sf::Color(255, 238, 70));
+        ui.dibujarTexto(ventana, "Siguiente rival: " + nombresEnemigos[nivel - 1], 122.f, 322.f, 24, sf::Color(80, 210, 255));
+        ui.dibujarTexto(ventana, "Puntos: " + std::to_string(puntos) + "   Vidas: " + std::to_string(jugador.vidas), 122.f, 365.f, 22, sf::Color::White);
 
-        sf::RectangleShape tarjetaDer(sf::Vector2f(250.f, 170.f));
-        tarjetaDer.setPosition(455.f, panelY + 105.f);
-        tarjetaDer.setFillColor(sf::Color(10, 30, 28, 245));
-        tarjetaDer.setOutlineColor(sf::Color(80, 210, 255));
-        tarjetaDer.setOutlineThickness(2.f + pulso);
-        ventana.draw(tarjetaDer);
-
-        sf::Sprite estadioAnterior(tEscenarios[nivelAnterior - 1]);
-        estadioAnterior.setScale(250.f / estadioAnterior.getLocalBounds().width, 120.f / estadioAnterior.getLocalBounds().height);
-        estadioAnterior.setPosition(95.f, panelY + 105.f);
-        estadioAnterior.setColor(sf::Color(255, 255, 255, 150));
-        ventana.draw(estadioAnterior);
-
-        sf::Sprite estadioSiguiente(tEscenarios[nivel - 1]);
-        estadioSiguiente.setScale(250.f / estadioSiguiente.getLocalBounds().width, 120.f / estadioSiguiente.getLocalBounds().height);
-        estadioSiguiente.setPosition(455.f, panelY + 105.f);
-        estadioSiguiente.setColor(sf::Color(255, 255, 255, 230));
-        ventana.draw(estadioSiguiente);
-
-        sf::RectangleShape sombraMiniIzq(sf::Vector2f(250.f, 50.f));
-        sombraMiniIzq.setPosition(95.f, panelY + 225.f);
-        sombraMiniIzq.setFillColor(sf::Color(0, 0, 0, 165));
-        ventana.draw(sombraMiniIzq);
-
-        sf::RectangleShape sombraMiniDer(sf::Vector2f(250.f, 50.f));
-        sombraMiniDer.setPosition(455.f, panelY + 225.f);
-        sombraMiniDer.setFillColor(sf::Color(0, 0, 0, 165));
-        ventana.draw(sombraMiniDer);
-
-        ui.dibujarTexto(ventana, "NIVEL " + std::to_string(nivelAnterior), 170.f, panelY + 235.f, 24, sf::Color(245, 210, 65));
-        ui.dibujarTexto(ventana, "NIVEL " + std::to_string(nivel), 530.f, panelY + 235.f, 24, sf::Color(80, 210, 255));
-
-        sf::CircleShape circuloFlecha(42.f);
-        circuloFlecha.setOrigin(42.f, 42.f);
-        circuloFlecha.setPosition(400.f, panelY + 190.f);
-        circuloFlecha.setFillColor(sf::Color(245, 210, 65, 230));
-        circuloFlecha.setOutlineColor(sf::Color::Black);
-        circuloFlecha.setOutlineThickness(3.f);
-        ventana.draw(circuloFlecha);
-
-        sf::ConvexShape flecha(3);
-        flecha.setPoint(0, sf::Vector2f(382.f, panelY + 168.f));
-        flecha.setPoint(1, sf::Vector2f(382.f, panelY + 212.f));
-        flecha.setPoint(2, sf::Vector2f(424.f, panelY + 190.f));
-        flecha.setFillColor(sf::Color(8, 22, 18));
-        ventana.draw(flecha);
-
-        ui.dibujarTexto(ventana, "Rival derrotado: " + nombresEnemigos[ultimoJefeDerrotado], 95.f, panelY + 308.f, 20, sf::Color(245, 210, 65));
-        ui.dibujarTexto(ventana, "Siguiente rival: " + nombresEnemigos[nivel - 1], 95.f, panelY + 344.f, 20, sf::Color(80, 210, 255));
-        ui.dibujarTexto(ventana, "Puntos: " + std::to_string(puntos) + "   Vidas: " + std::to_string(jugador.vidas), 95.f, panelY + 380.f, 20, sf::Color::White);
-
-        sf::RectangleShape barra(sf::Vector2f(500.f, 12.f));
-        barra.setPosition(150.f, panelY + 420.f);
-        barra.setFillColor(sf::Color(35, 35, 35, 230));
+        sf::RectangleShape barra(sf::Vector2f(500.f, 14.f));
+        barra.setPosition(150.f, 427.f);
+        barra.setFillColor(sf::Color(20, 20, 20, 225));
         ventana.draw(barra);
 
-        sf::RectangleShape progreso(sf::Vector2f(std::min(500.f, tiempoTransicionNivel * 160.f), 12.f));
-        progreso.setPosition(150.f, panelY + 420.f);
-        progreso.setFillColor(sf::Color(245, 210, 65));
+        sf::RectangleShape progreso(sf::Vector2f(std::min(500.f, tiempoTransicionNivel * 170.f), 14.f));
+        progreso.setPosition(150.f, 427.f);
+        progreso.setFillColor(sf::Color(255, 238, 70));
         ventana.draw(progreso);
 
         sf::RectangleShape botonContinuar(sf::Vector2f(330.f, 44.f));
-        botonContinuar.setPosition(235.f, panelY + 445.f);
+        botonContinuar.setPosition(235.f, 472.f);
         botonContinuar.setFillColor(sf::Color(245, 197, 66));
         botonContinuar.setOutlineColor(sf::Color::Black);
         botonContinuar.setOutlineThickness(2.f);
         ventana.draw(botonContinuar);
-        ui.dibujarTexto(ventana, "CLICK PARA CONTINUAR", 306.f, panelY + 457.f, 17, sf::Color::Black);
+        ui.dibujarTexto(ventana, "CLICK PARA CONTINUAR", 306.f, 484.f, 17, sf::Color::Black);
     }
 
     void dibujarFlashGolpeJefe() {
@@ -760,6 +735,53 @@ private:
         impacto.setOutlineColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(alpha)));
         impacto.setOutlineThickness(3.f);
         ventana.draw(impacto);
+    }
+
+    void dibujarGolCambioEnemigo() {
+        if (tiempoGolCambio <= 0.f) return;
+
+        float vida = std::min(1.f, tiempoGolCambio / 2.35f);
+        float entrada = std::min(1.f, (2.35f - tiempoGolCambio) / 0.35f);
+        float pulso = (std::sin(tiempoAnimacion * 9.f) + 1.f) * 0.5f;
+        float alpha = std::min(255.f, vida * 300.f);
+
+        sf::RectangleShape capa(sf::Vector2f(800.f, 600.f));
+        capa.setFillColor(sf::Color(0, 0, 0, static_cast<sf::Uint8>(80.f * vida)));
+        ventana.draw(capa);
+
+        for (int i = 0; i < 4; ++i) {
+            float radio = 58.f + std::fmod((2.35f - tiempoGolCambio) * 260.f + i * 48.f, 230.f);
+            float fade = 1.f - std::min(1.f, radio / 270.f);
+            sf::CircleShape onda(radio);
+            onda.setOrigin(radio, radio);
+            onda.setPosition(400.f, 180.f);
+            onda.setFillColor(sf::Color::Transparent);
+            onda.setOutlineColor(sf::Color(255, 238, 70, static_cast<sf::Uint8>(150.f * fade * vida)));
+            onda.setOutlineThickness(4.f);
+            ventana.draw(onda);
+        }
+
+        for (int i = 0; i < 28; ++i) {
+            float x = std::fmod(i * 67.f + tiempoAnimacion * (95.f + (i % 4) * 18.f), 860.f) - 30.f;
+            float y = std::fmod(i * 41.f + tiempoAnimacion * (150.f + (i % 5) * 12.f), 360.f) - 40.f;
+            sf::RectangleShape papel(sf::Vector2f(11.f + (i % 3) * 3.f, 6.f));
+            papel.setOrigin(papel.getSize().x / 2.f, papel.getSize().y / 2.f);
+            papel.setPosition(x, y);
+            papel.setRotation(std::fmod(tiempoAnimacion * 210.f + i * 27.f, 360.f));
+            sf::Color colores[4] = {
+                sf::Color(255, 238, 70, static_cast<sf::Uint8>(alpha)),
+                sf::Color(80, 210, 255, static_cast<sf::Uint8>(alpha)),
+                sf::Color(255, 90, 95, static_cast<sf::Uint8>(alpha)),
+                sf::Color(110, 245, 150, static_cast<sf::Uint8>(alpha))
+            };
+            papel.setFillColor(colores[i % 4]);
+            ventana.draw(papel);
+        }
+
+        float sacudida = std::sin(tiempoAnimacion * 42.f) * (1.f - entrada) * 8.f;
+        unsigned int tam = static_cast<unsigned int>(78.f + pulso * 14.f);
+        dibujarTextoSombra("GOOOOL", 206.f + sacudida, 78.f - (1.f - entrada) * 28.f, tam, sf::Color(255, 238, 70, static_cast<sf::Uint8>(alpha)));
+        dibujarTextoSombra("NUEVO RIVAL: " + nombresEnemigos[nivel - 1], 210.f, 176.f, 25, sf::Color(255, 255, 255, static_cast<sf::Uint8>(alpha)));
     }
 
     void dibujarPowerUpConFeedback(const PowerUp& powerup) {
@@ -1074,7 +1096,7 @@ private:
 
 public:
     Juego() : ventana(sf::VideoMode(800, 600), "Futbol Adventure: Liga de Barrio"), estadoActual(GameState::MENU), musicaFondo(nullptr), musicaMenu(nullptr), musicaJuegoActiva(false),
-              sonidoLanzamiento(nullptr), sonidoSilbato(nullptr), sonidoEnemigoDerrota(nullptr), sonidoDerrota(nullptr), sonidoVictoria(nullptr), sonidoHover(nullptr) {
+              sonidoLanzamiento(nullptr), sonidoSilbato(nullptr), sonidoEnemigoDerrota(nullptr), sonidoDerrota(nullptr), sonidoVictoria(nullptr), sonidoHover(nullptr), sonidoGritoGol(nullptr) {
         ventana.setVisible(true);
         ventana.setPosition(sf::Vector2i(80, 80));
         ventana.setFramerateLimit(60);
@@ -1097,6 +1119,7 @@ public:
         tiempoSacudida = 0.f;
         tiempoSpawnPowerUp = 0.f;
         tiempoDisparoJugador = 0.f;
+        tiempoGolCambio = 0.f;
         ultimoJefeDerrotado = 0;
         poderActivo = PowerUpType::NINGUNO;
         personajeSeleccionadoIdx = 0;
@@ -1161,6 +1184,7 @@ public:
             sonidoDerrota = crearSonido(bufRondaPerdida, 58.f);
             sonidoVictoria = crearSonido(bufVictoria, 50.f);
             sonidoHover = crearSonido(bufLanzamiento, 12.f);
+            sonidoGritoGol = crearSonido(bufVictoria, 72.f, 1.08f);
 
             float tonosJugador[6] = {0.82f, 0.94f, 1.06f, 1.18f, 1.30f, 1.44f};
             float tonosGolpeJugador[6] = {0.88f, 0.95f, 1.02f, 1.09f, 1.16f, 1.23f};
@@ -1211,6 +1235,7 @@ public:
         delete sonidoDerrota;
         delete sonidoVictoria;
         delete sonidoHover;
+        delete sonidoGritoGol;
         for (int i = 0; i < 6; ++i) {
             delete sonidosJugador[i];
             delete sonidosGolpeJugador[i];
@@ -1300,6 +1325,7 @@ private:
         if (tiempoDisparoJugador > 0.f) tiempoDisparoJugador -= dt;
         if (tiempoFlashJefe > 0.f) tiempoFlashJefe -= dt;
         if (tiempoSacudida > 0.f) tiempoSacudida -= dt;
+        if (tiempoGolCambio > 0.f) tiempoGolCambio -= dt;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) jugador.mover(-1.f, dt);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) jugador.mover(1.f, dt);
@@ -1349,6 +1375,7 @@ private:
                     if (nivel < 5) {
                         nivel++;
                         tiempoTransicionNivel = 0.f;
+                        reproducirSonido(sonidoGritoGol);
                         estadoActual = GameState::PANTALLA_NIVEL;
                         return;
                     } else {
@@ -1389,7 +1416,6 @@ private:
                 it = powerups.erase(it);
                 tiempoSpawnPowerUp = 0.f;
             } else if (it->sprite.getGlobalBounds().intersects(jugador.sprite.getGlobalBounds())) {
-<<<<<<< HEAD
                 if (it->tipo == PowerUpType::VIDA_EXTRA) {
                     if (jugador.vidas < 3) {
                         jugador.vidas++;
@@ -1400,8 +1426,6 @@ private:
                     continue;
                 }
 
-=======
->>>>>>> 8b116776f32b40cb17ce364bbc07614c3b697c06
                 poderActivo = it->tipo;
                 tiempoSpawnPowerUp = 0.f;
                 if(poderActivo == PowerUpType::TARJETA_ROJA) {
@@ -1599,6 +1623,7 @@ private:
             dibujarFlashGolpeJefe();
 
             ui.dibujarHUD(ventana, puntos, nivel, jugador.vidas, (jefe ? jefe->vida : 0), poderActivo, tiempoPoder);
+            dibujarGolCambioEnemigo();
         }
         else if (estadoActual == GameState::PANTALLA_NIVEL) {
             dibujarTransicionNivel();
