@@ -12,7 +12,7 @@ public:
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
-        sprite.setScale(0.24f, 0.24f);
+        sprite.setScale(0.16f, 0.16f);
     }
 
     void actualizar(float dt) {
@@ -32,7 +32,7 @@ public:
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
-        sprite.setScale(0.22f, 0.22f);
+        sprite.setScale(0.16f, 0.16f);
     }
 
     void actualizar(float dt) {
@@ -52,7 +52,7 @@ public:
         sprite.setTexture(tex);
         sprite.setOrigin(tex.getSize().x / 2.f, tex.getSize().y / 2.f);
         sprite.setPosition(x, y);
-        sprite.setScale(0.28f, 0.28f);
+        sprite.setScale(0.20f, 0.20f);
     }
 
     void actualizar(float dt) {
