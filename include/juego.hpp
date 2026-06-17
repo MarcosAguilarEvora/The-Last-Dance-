@@ -82,7 +82,7 @@ private:
         tiempoDisparoJugador = 0.f;
         tiempoFlashJefe = 0.f;
         tiempoSacudida = 0.f;
-        tiempoGolCambio = (nvl > 1) ? 2.35f : 0.f;
+        tiempoGolCambio = 0.f;
         reproducirSonido(sonidoSilbato);
     }
 
@@ -626,102 +626,30 @@ private:
     }
 
     void dibujarTransicionNivel() {
-        dibujarFondoMenu();
+        if (nivel >= 1 && nivel <= 5 && tEscenarios[nivel - 1].getSize().x > 0 && tEscenarios[nivel - 1].getSize().y > 0) {
+            sf::Sprite fondo(tEscenarios[nivel - 1]);
+            float sx = 800.f / tEscenarios[nivel - 1].getSize().x;
+            float sy = 600.f / tEscenarios[nivel - 1].getSize().y;
+            float escala = std::max(sx, sy);
+            fondo.setScale(escala, escala);
+            fondo.setPosition((800.f - tEscenarios[nivel - 1].getSize().x * escala) * 0.5f,
+                              (600.f - tEscenarios[nivel - 1].getSize().y * escala) * 0.5f);
+            ventana.draw(fondo);
+        } else {
+            dibujarFondoMenu();
+        }
 
         sf::RectangleShape capa(sf::Vector2f(800.f, 600.f));
-        capa.setFillColor(sf::Color(0, 0, 0, 130));
+        capa.setFillColor(sf::Color(0, 0, 0, 105));
         ventana.draw(capa);
 
-        dibujarLucesEstadio(78.f);
+        float pulso = (std::sin(tiempoAnimacion * 6.5f) + 1.f) * 0.5f;
+        unsigned int tamGol = static_cast<unsigned int>(82.f + pulso * 34.f);
+        float xGol = 400.f - (tamGol * 2.05f);
+        float yGol = 220.f - (tamGol * 0.55f);
 
-        float entrada = std::min(1.f, tiempoTransicionNivel / 0.42f);
-        float pulso = (std::sin(tiempoAnimacion * 7.f) + 1.f) * 0.5f;
-        float golpe = std::max(0.f, 1.f - tiempoTransicionNivel / 0.75f);
-        float sacudida = std::sin(tiempoAnimacion * 45.f) * golpe * 10.f;
-
-        sf::RectangleShape flash(sf::Vector2f(800.f, 600.f));
-        flash.setFillColor(sf::Color(255, 238, 70, static_cast<sf::Uint8>(95.f * golpe)));
-        ventana.draw(flash);
-
-        for (int i = 0; i < 5; ++i) {
-            float radio = 58.f + std::fmod(tiempoTransicionNivel * 230.f + i * 45.f, 260.f);
-            sf::CircleShape onda(radio);
-            onda.setOrigin(radio, radio);
-            onda.setPosition(400.f, 200.f);
-            onda.setFillColor(sf::Color::Transparent);
-            float fade = 1.f - std::min(1.f, radio / 320.f);
-            onda.setOutlineColor(sf::Color(255, 238, 70, static_cast<sf::Uint8>(150.f * fade)));
-            onda.setOutlineThickness(4.f);
-            ventana.draw(onda);
-        }
-
-        for (int i = 0; i < 42; ++i) {
-            float baseX = std::fmod(i * 61.f + tiempoTransicionNivel * (120.f + (i % 5) * 25.f), 880.f) - 40.f;
-            float y = std::fmod(i * 37.f + tiempoTransicionNivel * (210.f + (i % 4) * 35.f), 650.f) - 40.f;
-            sf::RectangleShape papel(sf::Vector2f(10.f + (i % 3) * 4.f, 5.f + (i % 2) * 5.f));
-            papel.setOrigin(papel.getSize().x / 2.f, papel.getSize().y / 2.f);
-            papel.setPosition(baseX, y);
-            papel.setRotation(std::fmod(tiempoAnimacion * 190.f + i * 31.f, 360.f));
-            sf::Color colores[4] = {
-                sf::Color(255, 238, 70, 220),
-                sf::Color(80, 210, 255, 220),
-                sf::Color(255, 90, 95, 220),
-                sf::Color(110, 245, 150, 220)
-            };
-            papel.setFillColor(colores[i % 4]);
-            ventana.draw(papel);
-        }
-
-        sf::RectangleShape panel(sf::Vector2f(650.f, 245.f));
-        panel.setOrigin(325.f, 122.5f);
-        panel.setPosition(400.f, 342.f + (1.f - entrada) * 34.f);
-        panel.setFillColor(sf::Color(4, 18, 24, 210));
-        panel.setOutlineColor(sf::Color(255, 238, 70, 210));
-        panel.setOutlineThickness(3.f);
-        ventana.draw(panel);
-
-        sf::CircleShape balonFestejo(58.f + pulso * 6.f);
-        balonFestejo.setOrigin(balonFestejo.getRadius(), balonFestejo.getRadius());
-        balonFestejo.setPosition(400.f + sacudida, 214.f);
-        balonFestejo.setFillColor(sf::Color(245, 245, 245, 235));
-        balonFestejo.setOutlineColor(sf::Color(20, 24, 24, 245));
-        balonFestejo.setOutlineThickness(7.f);
-        ventana.draw(balonFestejo);
-
-        for (int i = 0; i < 5; ++i) {
-            sf::RectangleShape marca(sf::Vector2f(62.f, 8.f));
-            marca.setOrigin(31.f, 4.f);
-            marca.setPosition(400.f + sacudida, 214.f);
-            marca.setRotation(i * 72.f + tiempoAnimacion * 60.f);
-            marca.setFillColor(sf::Color(20, 24, 24, 210));
-            ventana.draw(marca);
-        }
-
-        unsigned int tamGol = static_cast<unsigned int>(82.f + pulso * 12.f + golpe * 20.f);
-        dibujarTextoSombra("GOOOOL", 205.f + sacudida, 58.f - golpe * 10.f, tamGol, sf::Color(255, 238, 70));
-        dibujarTextoSombra("FIN DE RONDA", 294.f, 146.f, 28, sf::Color::White);
-
-        ui.dibujarTexto(ventana, "Rival derrotado: " + nombresEnemigos[ultimoJefeDerrotado], 122.f, 279.f, 24, sf::Color(255, 238, 70));
-        ui.dibujarTexto(ventana, "Siguiente rival: " + nombresEnemigos[nivel - 1], 122.f, 322.f, 24, sf::Color(80, 210, 255));
-        ui.dibujarTexto(ventana, "Puntos: " + std::to_string(puntos) + "   Vidas: " + std::to_string(jugador.vidas), 122.f, 365.f, 22, sf::Color::White);
-
-        sf::RectangleShape barra(sf::Vector2f(500.f, 14.f));
-        barra.setPosition(150.f, 427.f);
-        barra.setFillColor(sf::Color(20, 20, 20, 225));
-        ventana.draw(barra);
-
-        sf::RectangleShape progreso(sf::Vector2f(std::min(500.f, tiempoTransicionNivel * 170.f), 14.f));
-        progreso.setPosition(150.f, 427.f);
-        progreso.setFillColor(sf::Color(255, 238, 70));
-        ventana.draw(progreso);
-
-        sf::RectangleShape botonContinuar(sf::Vector2f(330.f, 44.f));
-        botonContinuar.setPosition(235.f, 472.f);
-        botonContinuar.setFillColor(sf::Color(245, 197, 66));
-        botonContinuar.setOutlineColor(sf::Color::Black);
-        botonContinuar.setOutlineThickness(2.f);
-        ventana.draw(botonContinuar);
-        ui.dibujarTexto(ventana, "CLICK PARA CONTINUAR", 306.f, 484.f, 17, sf::Color::Black);
+        dibujarTextoSombra("GOOOOL", xGol, yGol, tamGol, sf::Color(255, 238, 70));
+        ui.dibujarTexto(ventana, "Avanzando a nivel " + std::to_string(nivel), 285.f, 336.f, 26, sf::Color::White);
     }
 
     void dibujarFlashGolpeJefe() {
