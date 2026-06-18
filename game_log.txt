@@ -175,3 +175,9 @@ Juego cerrado normalmente
 =======
 >>>>>>> 5aa2d84bdb3f873abe861c230c8ffa09c367fb41
 >>>>>>> fbf576324f9f19a86c57735e5a632d947d1bcfa3
+Iniciando juego
+Juego creado
+Juego cerrado normalmente
+Iniciando juego
+Juego creado
+Juego cerrado normalmente
